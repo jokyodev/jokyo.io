@@ -1,20 +1,15 @@
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { ReactNode } from "react";
 
 import Image from "next/image";
-import { Quote } from "lucide-react";
+
+import Link from "next/link";
 
 const AuthLayout = ({ children }: { children: ReactNode }) => {
   return (
-    <div className="w-full min-h-svh grid grid-cols-1 md:grid-cols-2">
-      <div className="flex flex-col items-center justify-center border">
+    <div className="w-full min-h-svh grid grid-cols-1 lg:grid-cols-2">
+      <div className="flex flex-col items-center justify-center border bg-linear-to-br from-gray-50 to-gray-200 px-5">
         {/* LOGO */}
-        <div className="flex items-center gap-2 justify-center">
+        <Link href="/" className="flex items-center gap-2 justify-center">
           <Image
             src="/logo.png"
             width={30}
@@ -23,20 +18,20 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
             className="rounded-sm"
           />
           <span className="font-bold">Jokyo.com</span>
-        </div>
+        </Link>
 
         <div className="py-3 w-full flex items-center justify-center">
           {children}
         </div>
       </div>
-      <div className="flex items-center justify-center bg-linear-to-br from-indigo-500 to-indigo-900">
+      <div className="hidden lg:flex items-center justify-center bg-linear-to-br from-indigo-500 to-indigo-900">
         <div className="w-full max-w-100 py-10 bg-white rounded-lg px-10">
           <p className="text-muted-foreground text-sm">
             Lập trình không chỉ là viết mã, mà là nghệ thuật giải quyết vấn đề
             và kiến tạo tương lai. Mỗi dòng code sạch là một viên gạch xây nên
             thế giới số đầy kỳ diệu.
           </p>
-          <div className="flex items-center gap-2 mt-3">
+          <div className="flex items-center gap-2 mt-3 ">
             <div>
               <Image
                 src="/logo.png"
