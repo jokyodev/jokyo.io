@@ -1,9 +1,13 @@
 import { betterAuth } from "better-auth";
+
+import { admin } from "better-auth/plugins";
+
 import { prismaAdapter } from "better-auth/adapters/prisma";
 
 import { PrismaClient } from "@/generated/prisma/client";
 
 import { PrismaPg } from "@prisma/adapter-pg";
+
 import { resend } from "./resent";
 
 const adapter = new PrismaPg({
@@ -17,6 +21,7 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+  plugins: [admin()],
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,

@@ -14,20 +14,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  signInSchema,
-  SignInSchemaType,
-  signUpSchema,
-  SignUpSchemaType,
-} from "@/lib/zod-schemas";
+import { signInSchema, SignInSchemaType } from "@/lib/zod-schemas/auth-schema";
 import { useForm } from "react-hook-form";
-import Image from "next/image";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { BadgeQuestionMark, Loader, Loader2 } from "lucide-react";
+import { BadgeQuestionMark, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";

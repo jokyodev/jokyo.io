@@ -17,3 +17,13 @@ export const requireUnAuth = async () => {
 
   if (session) redirect("/");
 };
+
+export const requireAdmin = async () => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session) return redirect("/signin");
+
+  const isAdmin = session.user.role === "admin";
+  if (!isAdmin) return redirect("/");
+};

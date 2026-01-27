@@ -14,9 +14,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { signUpSchema, SignUpSchemaType } from "@/lib/zod-schemas";
+import { signUpSchema, SignUpSchemaType } from "@/lib/zod-schemas/auth-schema";
 import { useForm } from "react-hook-form";
-import Image from "next/image";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
