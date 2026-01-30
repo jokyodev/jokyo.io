@@ -1,4 +1,4 @@
-import CourseList from "@/features/course/components/course-list";
+import CourseList from "@/features/admin/course/components/course/course-list";
 
 const Page = () => {
   return (

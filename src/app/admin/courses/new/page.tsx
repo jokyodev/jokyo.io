@@ -1,4 +1,4 @@
-import NewCourse from "@/features/course/components/new-course";
+import NewCourse from "@/features/admin/course/components/course/new-course";
 
 const Page = () => {
   return <NewCourse />;

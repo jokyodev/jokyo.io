@@ -13,19 +13,25 @@ import {
 
 export const ADMIN_SIDEBAR_LINKS = [
   {
-    name: "Dashboard",
+    name: "Tổng quan",
     href: "/admin",
     icon: LayoutDashboard,
   },
   {
-    name: "Courses",
+    name: "Khóa học",
     href: "/admin/courses",
     icon: BookOpen,
   },
 
   {
-    name: "Users list",
+    name: "Học viên",
     href: "/admin/users",
     icon: Users,
+  },
+];
+
+export const DASHBOARD_LINKS = [
+  {
+    name: "dashboard",
   },
 ];
