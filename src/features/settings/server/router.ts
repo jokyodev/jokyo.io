@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { adminProcedure, createTRPCRouter } from "@/trpc/init";
+import { adminProcedure, baseProcedure, createTRPCRouter } from "@/trpc/init";
 import prisma from "@/lib/db";
 
 export const settingRouter = createTRPCRouter({
   // Lấy cấu hình
-  getSiteConfig: adminProcedure.query(async () => {
+  getSiteConfig: baseProcedure.query(async () => {
     const config = await prisma.siteConfiguration.findUnique({
       where: { id: "global_config" },
     });

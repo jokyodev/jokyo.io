@@ -8,7 +8,7 @@ interface LoadingSpinnerProps {
 
 const LoadingSpinner = ({ className, size = 24 }: LoadingSpinnerProps) => {
   return (
-    <div className="flex h-full w-full items-center justify-center p-4 ">
+    <div className="flex h-full min-h-svh items-center justify-center p-4 ">
       <Loader2
         size={size}
         className={cn(
@@ -16,9 +16,6 @@ const LoadingSpinner = ({ className, size = 24 }: LoadingSpinnerProps) => {
           className,
         )}
       />
-      <span className="ml-2 text-sm text-muted-foreground font-medium">
-        Đang tải...
-      </span>
     </div>
   );
 };
