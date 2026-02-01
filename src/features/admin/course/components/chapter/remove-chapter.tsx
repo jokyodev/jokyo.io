@@ -1,13 +1,21 @@
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useTRPC } from "@/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Trash } from "lucide-react";
 import { toast } from "sonner";
 
 interface iAppProps {
-  courseId: string;
-  chapterId: string;
+  chapter: any;
 }
-const RemoveChapter = ({ courseId, chapterId }: iAppProps) => {
+const RemoveChapter = ({ chapter }: iAppProps) => {
   const trpc = useTRPC();
 
   const queryClient = useQueryClient();
@@ -18,7 +26,7 @@ const RemoveChapter = ({ courseId, chapterId }: iAppProps) => {
         toast.success("Xóa chapter thành công");
         queryClient.invalidateQueries({
           queryKey: trpc.course.getOne.queryKey({
-            courseId: courseId,
+            courseId: chapter.courseId,
           }),
         });
       },
@@ -29,27 +37,66 @@ const RemoveChapter = ({ courseId, chapterId }: iAppProps) => {
   );
   const handleRemoveChapter = () => {
     removeChapter.mutate({
-      courseId: courseId,
-      chapterId: chapterId,
+      courseId: chapter.courseId,
+      chapterId: chapter.id,
     });
   };
 
+  // return (
+  //   <>
+  //     {removeChapter.isPending ? (
+  //       <>
+  //         <Loader2 className="w-4 h-4 animate-spin" />
+  //       </>
+  //     ) : (
+  //       <>
+  //         <Trash
+  //           onClick={handleRemoveChapter}
+  //           size={16}
+  //           className="cursor-pointer text-zinc-400"
+  //         />
+  //       </>
+  //     )}
+  //   </>
+  // );
+
   return (
-    <>
-      {removeChapter.isPending ? (
-        <>
-          <Loader2 className="w-4 h-4 animate-spin" />
-        </>
-      ) : (
-        <>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>
           <Trash
             onClick={handleRemoveChapter}
             size={16}
-            className="cursor-pointer text-zinc-400"
+            className="cursor-pointer"
           />
-        </>
-      )}
-    </>
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xóa chương học ({chapter.name}) </DialogTitle>
+          <DialogDescription>
+            Các bài học thuộc chương học này sẽ được xóa theo
+          </DialogDescription>
+        </DialogHeader>
+
+        <Button
+          onClick={handleRemoveChapter}
+          variant="destructive"
+          disabled={removeChapter.isPending}
+        >
+          <>
+            {removeChapter.isPending ? (
+              <div className="flex items-center gap-1">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Đang xóa...
+              </div>
+            ) : (
+              <>Xóa chương học</>
+            )}
+          </>
+        </Button>
+      </DialogContent>
+    </Dialog>
   );
 };
 

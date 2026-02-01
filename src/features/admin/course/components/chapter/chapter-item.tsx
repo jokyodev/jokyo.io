@@ -48,7 +48,7 @@ const ChapterItem = ({ chapter }: iAppProps) => {
           >
             <Pencil size={16} />
           </Button>
-          <RemoveChapter courseId={chapter.courseId} chapterId={chapter.id} />
+          <RemoveChapter chapter={chapter} />
         </div>
       </div>
 

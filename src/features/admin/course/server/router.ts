@@ -182,7 +182,7 @@ export const chapterRouter = createTRPCRouter({
         });
 
         // 2. Tính toán position mới
-        const newPosition = lastChapter ? lastChapter.position + 1 : 0;
+        const newPosition = lastChapter ? lastChapter.position + 1 : 1;
 
         // 3. Tạo chapter mới với position vừa tính
         return await tx.chapter.create({
@@ -286,8 +286,8 @@ export const lessonRouter = createTRPCRouter({
           },
         });
 
-        // 2. Tính toán position mới (nếu chưa có bài nào thì bắt đầu từ 0)
-        const newPosition = lastLesson ? lastLesson.position + 1 : 0;
+        // 2. Tính toán position mới (nếu chưa có bài nào thì bắt đầu từ 1)
+        const newPosition = lastLesson ? lastLesson.position + 1 : 1;
 
         // 3. Tạo bài học mới
         return await tx.lesson.create({
@@ -312,7 +312,10 @@ export const lessonRouter = createTRPCRouter({
         where: {
           id: input.lessonId,
         },
-        data: input.data,
+        data: {
+          ...input.data,
+          duration: Number(input.data.duration),
+        },
       });
     }),
 

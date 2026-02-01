@@ -7,15 +7,23 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
 import { useTransition } from "react";
+import { getVideoUrl } from "@/utils";
 
 interface iAppProps {
   value?: string;
-  onChange?: (value: string) => void;
+  onComplete: (data: { videoKey: string; duration: string }) => void;
 }
-const VideoUploader = ({ value, onChange }: iAppProps) => {
+const VideoUploader = ({ value, onComplete }: iAppProps) => {
   const [isPending, startTransition] = useTransition();
-  const { handleFileChange, reset, file, error, previewUrl, inputRef } =
-    useInput(5 * 1024 * 1024 * 1024);
+  const {
+    handleFileChange,
+    reset,
+    file,
+    error,
+    previewUrl,
+    inputRef,
+    duration,
+  } = useInput(5 * 1024 * 1024 * 1024);
 
   const trpc = useTRPC();
 
@@ -44,7 +52,10 @@ const VideoUploader = ({ value, onChange }: iAppProps) => {
   };
   const handleReset = async () => {
     reset();
-    onChange?.("");
+    onComplete({
+      videoKey: "",
+      duration: "0",
+    });
     if (value) {
       const { accessKey, deleteVideoUrl } =
         await createDeleteVideoUrl.mutateAsync({
@@ -63,7 +74,10 @@ const VideoUploader = ({ value, onChange }: iAppProps) => {
     startTransition(async () => {
       try {
         const { guid, accessKey } = await createVideo.mutateAsync();
-        onChange?.(guid);
+        onComplete({
+          videoKey: guid,
+          duration: duration.toString(),
+        });
 
         const uploadUrl = `${process.env.NEXT_PUBLIC_BUNNY_STREAM_BASE_URL}/library/${process.env.NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID}/videos/${guid}`;
         const response = await axios.put(uploadUrl, file, {
@@ -132,7 +146,7 @@ const VideoUploader = ({ value, onChange }: iAppProps) => {
         <>
           <div className="w-full aspect-video rounded-lg overflow-hidden bg-black shadow-lg">
             <iframe
-              src={`https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID}/${value}?autoplay=true&loop=false&muted=false&preload=true&responsive=true`}
+              src={getVideoUrl(value)}
               loading="lazy"
               allow="accelerometer;gyroscope;encrypted-media;picture-in-picture;"
               className="w-full h-full border-none"

@@ -29,8 +29,8 @@ const AdminHeader = () => {
             )}
           >
             <Plus className="size-4" />
-            <span className="hidden sm:inline">Create Course</span>
-            <span className="sm:hidden">Create</span>
+            <span className="hidden sm:inline">Tạo khóa học</span>
+            <span className="sm:hidden">Tạo</span>
           </Link>
 
           <div className="flex items-center gap-1 ml-2 border-l pl-3">

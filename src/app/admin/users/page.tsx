@@ -1,5 +1,7 @@
+import StudentList from "@/features/admin/students/components/student-list";
+
 const Page = () => {
-  return <div>User list</div>;
+  return <StudentList />;
 };
 
 export default Page;

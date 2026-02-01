@@ -1,5 +1,6 @@
 "use client";
 
+import { getFileDuration } from "@/utils";
 import { ChangeEvent, useRef, useState } from "react";
 
 export const useInput = (maxSize: number) => {
@@ -7,8 +8,9 @@ export const useInput = (maxSize: number) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [duration, setDuration] = useState<number>(0);
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     setError("");
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) {
@@ -16,13 +18,19 @@ export const useInput = (maxSize: number) => {
       return;
     }
     const fileSize = selectedFile.size;
+    const fileType = selectedFile.type;
+    if (fileType.startsWith("video/")) {
+      const _duration = await getFileDuration(selectedFile);
+      setDuration(_duration);
+    }
+
     if (fileSize > maxSize) {
       setError(
         `Kích thước file quá lớn ( tối đa ${maxSize / 1024 / 1024} MB )`,
       );
       return;
     }
-    console.log(selectedFile);
+
     setFile(selectedFile);
 
     if (previewUrl) {
@@ -49,5 +57,6 @@ export const useInput = (maxSize: number) => {
     error,
     previewUrl,
     inputRef,
+    duration,
   };
 };
