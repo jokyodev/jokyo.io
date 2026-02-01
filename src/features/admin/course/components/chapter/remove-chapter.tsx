@@ -44,8 +44,8 @@ const RemoveChapter = ({ courseId, chapterId }: iAppProps) => {
         <>
           <Trash
             onClick={handleRemoveChapter}
-            size={18}
-            className="cursor-pointer "
+            size={16}
+            className="cursor-pointer text-zinc-400"
           />
         </>
       )}

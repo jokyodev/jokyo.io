@@ -19,8 +19,12 @@ const ImageUploader = ({ value, onChange }: iAppProps) => {
   const { file, previewUrl, handleFileChange, error, reset, inputRef } =
     useInput(5 * 1024 * 1024);
 
-  const getUploadUrl = useMutation(trpc.image.getUploadUrl.mutationOptions());
-  const getDeleteUrl = useMutation(trpc.image.getDeleteUrl.mutationOptions());
+  const createUploadUrl = useMutation(
+    trpc.image.createUploadUrl.mutationOptions(),
+  );
+  const createDeleteUrl = useMutation(
+    trpc.image.createDeleteUrl.mutationOptions(),
+  );
 
   const upload = async () => {
     if (!file) return;
@@ -28,7 +32,7 @@ const ImageUploader = ({ value, onChange }: iAppProps) => {
       accessKey,
       uploadUrl,
       fileId: thumbnnailId,
-    } = await getUploadUrl.mutateAsync({
+    } = await createUploadUrl.mutateAsync({
       fileExtension: file.name.split(".")[1],
     });
     if (!accessKey || !uploadUrl) {
@@ -55,7 +59,7 @@ const ImageUploader = ({ value, onChange }: iAppProps) => {
   const deleteImage = async (value: string) => {
     onChange?.("");
     // const response = await axios.delete()
-    const { accessKey, deleteUrl } = await getDeleteUrl.mutateAsync({
+    const { accessKey, deleteUrl } = await createDeleteUrl.mutateAsync({
       fileName: value,
     });
     try {

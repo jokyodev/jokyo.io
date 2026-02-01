@@ -22,7 +22,7 @@ import {
 import { useTRPC } from "@/trpc/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -35,9 +35,18 @@ const NewChapter = ({ courseId }: iAppProps) => {
   const trpc = useTRPC();
 
   const queryClient = useQueryClient();
+
+  const form = useForm<ChapterSchemaType>({
+    resolver: zodResolver(chapterSchema),
+    defaultValues: {
+      name: "",
+      externalLink: "",
+    },
+  });
   const createChapter = useMutation(
     trpc.chapterRouter.create.mutationOptions({
       onSuccess: () => {
+        form.reset();
         toast.success("Tạo chapter thành công");
         queryClient.invalidateQueries({
           queryKey: trpc.course.getOne.queryKey({
@@ -52,13 +61,6 @@ const NewChapter = ({ courseId }: iAppProps) => {
     }),
   );
 
-  const form = useForm<ChapterSchemaType>({
-    resolver: zodResolver(chapterSchema),
-    defaultValues: {
-      name: "",
-      externalLink: "",
-    },
-  });
   const onSubmit = (values: ChapterSchemaType) => {
     createChapter.mutate({
       name: values.name,
@@ -115,7 +117,16 @@ const NewChapter = ({ courseId }: iAppProps) => {
                 </FormItem>
               )}
             />
-            <Button className="w-full">Tạo ngay</Button>
+            <Button disabled={createChapter.isPending} className="w-full">
+              {createChapter.isPending ? (
+                <div className="flex items-center gap-1">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Đang tạo
+                </div>
+              ) : (
+                <>Tạo ngay</>
+              )}
+            </Button>
           </form>
         </Form>
       </DialogContent>

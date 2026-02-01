@@ -7,6 +7,7 @@ import {
   courseSchema,
   courseStatus,
 } from "@/lib/zod-schemas/course-schema";
+import { lessonSchema } from "@/lib/zod-schemas/lesson-schema";
 export const categoryRouter = createTRPCRouter({
   getAll: adminProcedure.query(async () => {
     return prisma.category.findMany();
@@ -166,12 +167,32 @@ export const chapterRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return prisma.chapter.create({
-        data: {
-          name: input.name,
-          courseId: input.courseId,
-          externalLink: input?.externalLink,
-        },
+      return await prisma.$transaction(async (tx) => {
+        // 1. Tìm chapter có vị trí cao nhất trong khóa học này
+        const lastChapter = await tx.chapter.findFirst({
+          where: {
+            courseId: input.courseId,
+          },
+          orderBy: {
+            position: "desc",
+          },
+          select: {
+            position: true,
+          },
+        });
+
+        // 2. Tính toán position mới
+        const newPosition = lastChapter ? lastChapter.position + 1 : 0;
+
+        // 3. Tạo chapter mới với position vừa tính
+        return await tx.chapter.create({
+          data: {
+            name: input.name,
+            courseId: input.courseId,
+            externalLink: input?.externalLink,
+            position: newPosition,
+          },
+        });
       });
     }),
 
@@ -183,10 +204,130 @@ export const chapterRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return prisma.chapter.delete({
+      return await prisma.$transaction(async (tx) => {
+        // 1. Lấy thông tin chapter sắp xóa để biết position của nó
+        const chapterToDelete = await tx.chapter.findUnique({
+          where: {
+            id: input.chapterId,
+            courseId: input.courseId,
+          },
+          select: {
+            position: true,
+          },
+        });
+
+        if (!chapterToDelete) {
+          throw new Error("Chapter không tồn tại");
+        }
+
+        // 2. Thực hiện xóa chapter
+        const deletedChapter = await tx.chapter.delete({
+          where: {
+            id: input.chapterId,
+          },
+        });
+
+        // 3. Giảm position của tất cả các chapter đứng sau nó đi 1 đơn vị
+        await tx.chapter.updateMany({
+          where: {
+            courseId: input.courseId,
+            position: {
+              gt: chapterToDelete.position, // Lấy những thằng có position lớn hơn thằng vừa xóa
+            },
+          },
+          data: {
+            position: {
+              decrement: 1, // position = position - 1
+            },
+          },
+        });
+
+        return deletedChapter;
+      });
+    }),
+});
+
+export const lessonRouter = createTRPCRouter({
+  getOne: adminProcedure
+    .input(
+      z.object({
+        chapterId: z.string(),
+        lessonId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return prisma.lesson.findUnique({
         where: {
-          id: input.chapterId,
-          courseId: input.courseId,
+          id: input.lessonId,
+          chapterId: input.chapterId,
+        },
+      });
+    }),
+
+  create: adminProcedure
+    .input(
+      z.object({
+        chapterId: z.string(),
+        name: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await prisma.$transaction(async (tx) => {
+        // 1. Tìm bài học cuối cùng trong Chapter này để lấy position lớn nhất
+        const lastLesson = await tx.lesson.findFirst({
+          where: {
+            chapterId: input.chapterId,
+          },
+          orderBy: {
+            position: "desc",
+          },
+          select: {
+            position: true,
+          },
+        });
+
+        // 2. Tính toán position mới (nếu chưa có bài nào thì bắt đầu từ 0)
+        const newPosition = lastLesson ? lastLesson.position + 1 : 0;
+
+        // 3. Tạo bài học mới
+        return await tx.lesson.create({
+          data: {
+            chapterId: input.chapterId,
+            name: input.name,
+            position: newPosition,
+            // Đảm bảo bạn đã thêm trường position vào model Lesson trong schema.prisma
+          },
+        });
+      });
+    }),
+  update: adminProcedure
+    .input(
+      z.object({
+        lessonId: z.string(),
+        data: lessonSchema.partial(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return prisma.lesson.update({
+        where: {
+          id: input.lessonId,
+        },
+        data: input.data,
+      });
+    }),
+
+  remove: adminProcedure
+    .input(
+      z.object({
+        chapterId: z.string(),
+        lessonId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return prisma.lesson.delete({
+        where: {
+          id: input.lessonId,
+          chapterId: input.chapterId,
         },
       });
     }),

@@ -50,6 +50,7 @@ const CourseList = () => {
               <TableHead>Cấp độ</TableHead>
               <TableHead>Giá</TableHead>
               <TableHead>Danh mục</TableHead>
+
               <TableHead className="text-right">Thao tác</TableHead>
             </TableRow>
           </TableHeader>

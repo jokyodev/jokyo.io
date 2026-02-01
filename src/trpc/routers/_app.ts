@@ -2,9 +2,13 @@ import {
   categoryRouter,
   chapterRouter,
   courseRouter,
+  lessonRouter,
 } from "@/features/admin/course/server/router";
 import { createTRPCRouter } from "../init";
-import { imageRouter } from "@/features/admin/uploader/server/routers";
+import {
+  imageRouter,
+  videoRouter,
+} from "@/features/admin/uploader/server/routers";
 import { clientCourseRouter } from "@/features/courses/server/router";
 export const appRouter = createTRPCRouter({
   image: imageRouter,
@@ -12,6 +16,8 @@ export const appRouter = createTRPCRouter({
   course: courseRouter,
   clientCourse: clientCourseRouter,
   chapterRouter: chapterRouter,
+  lessonRouter: lessonRouter,
+  videoRouter: videoRouter,
 });
 // export type definition of API
 export type AppRouter = typeof appRouter;

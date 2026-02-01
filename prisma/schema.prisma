@@ -107,6 +107,7 @@ model Chapter {
   course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons      Lesson[]
   externalLink String?
+  position Int 
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -117,8 +118,12 @@ model Lesson {
   name      String
   chapterId String
   chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
 
+  position Int 
+  videoKey String?
+  status LessonStatus @default(PRIVATE)
+
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
@@ -138,6 +143,11 @@ enum CourseLevels {
 }
 
 enum CourseStatus {
+  PRIVATE
+  PUBLISH
+}
+
+enum LessonStatus {
   PRIVATE
   PUBLISH
 }

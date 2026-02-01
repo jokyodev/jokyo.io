@@ -1,6 +1,4 @@
 import EditCourse from "@/features/admin/course/components/course/edit-course";
-import { caller } from "@/trpc/server";
-import { redirect } from "next/navigation";
 
 type Params = Promise<{
   courseId: string;
