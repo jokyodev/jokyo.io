@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   BarChart3,
   FileVideo,
+  Settings2Icon,
 } from "lucide-react";
 
 export const ADMIN_SIDEBAR_LINKS = [
@@ -27,6 +28,11 @@ export const ADMIN_SIDEBAR_LINKS = [
     name: "Học viên",
     href: "/admin/users",
     icon: Users,
+  },
+  {
+    name: "Cài đặt",
+    href: "/admin/settings",
+    icon: Settings,
   },
 ];
 

@@ -14,26 +14,60 @@ import { useTRPC } from "@/trpc/client";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/loading-spinner";
 import { Button } from "@/components/ui/button";
-import { Ban, Eye, Trash } from "lucide-react";
+import {
+  Ban,
+  Eye,
+  Filter,
+  Search,
+  SlidersHorizontal,
+  Trash,
+} from "lucide-react";
+import BanUser from "./ban-user";
+import { Input } from "@/components/ui/input";
 
 const StudentList = () => {
   const trpc = useTRPC();
   const { data: students, isLoading } = useQuery(
     trpc.studentRouter.getAll.queryOptions(),
   );
-  console.log("students", students);
 
   if (isLoading) return <LoadingSpinner />;
 
   return (
     <div className="rounded-md border p-10 mt-1">
-      <div className="flex items-center gap-x-2 mb-6">
-        <h3 className="text-lg font-semibold text-slate-900">
-          Danh sách học viên
-        </h3>
-        {/* Hiển thị số lượng bên trong một chiếc Badge nhỏ */}
-        <div className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold">
-          {students?.length || 0}
+      <div className="flex items-center gap-x-2 mb-6 justify-between">
+        <div className="flex items-center gap-x-2 ">
+          <h3 className="text-lg font-semibold ">Danh sách học viên</h3>
+          {/* Hiển thị số lượng bên trong một chiếc Badge nhỏ */}
+          <div className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold">
+            {students?.length || 0}
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-4 mb-6">
+          {/* Nhóm tìm kiếm bên trái */}
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Tìm kiếm tên hoặc email học viên..."
+              className="pl-9 focus-visible:ring-blue-500 bg-white"
+            />
+          </div>
+
+          {/* Nhóm chức năng bên phải */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 flex items-center gap-2 border-dashed"
+            >
+              <SlidersHorizontal size={16} />
+              Bộ lọc
+            </Button>
+
+            <Button size="sm" className="h-9 shadow-sm">
+              Xuất CSV
+            </Button>
+          </div>
         </div>
       </div>
       <Table>
@@ -88,9 +122,7 @@ const StudentList = () => {
 
               <TableCell>1</TableCell>
               <TableCell className="flex items-center gap-1">
-                <Button>
-                  <Ban />
-                </Button>
+                <BanUser student={student} />
                 <Button>
                   <Eye />
                 </Button>

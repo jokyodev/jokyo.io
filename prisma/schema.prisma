@@ -152,3 +152,21 @@ enum LessonStatus {
   PRIVATE
   PUBLISH
 }
+
+model SiteConfiguration {
+  id String @id @default("global_config")
+
+  // Trạng thái bảo trì
+  maintenanceMode Boolean @default(false)
+  maintenanceMsg  String? @default("Chúng tôi đang nâng cấp hệ thống để mang lại trải nghiệm tốt hơn.")
+
+  // Thời gian (Rất quan trọng để hiển thị Countdown cho học viên)
+  maintenanceStart DateTime?
+  maintenanceEnd   DateTime? // Dự kiến hoàn thành
+
+  // Tính năng nâng cao
+  bypassTokens String[] @default([]) // Các mã Token để truy cập web ngay cả khi đang bảo trì
+
+  updatedAt DateTime @updatedAt
+  updatedBy String? // ID của Admin thực hiện thay đổi
+}
