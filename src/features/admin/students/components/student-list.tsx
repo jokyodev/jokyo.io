@@ -18,6 +18,8 @@ import {
   Ban,
   Eye,
   Filter,
+  Loader2,
+  RotateCcw,
   Search,
   SlidersHorizontal,
   Trash,
@@ -27,9 +29,12 @@ import { Input } from "@/components/ui/input";
 
 const StudentList = () => {
   const trpc = useTRPC();
-  const { data: students, isLoading } = useQuery(
-    trpc.studentRouter.getAll.queryOptions(),
-  );
+  const {
+    data: students,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useQuery(trpc.studentRouter.getAll.queryOptions());
 
   if (isLoading) return <LoadingSpinner />;
 
@@ -64,8 +69,16 @@ const StudentList = () => {
               Bộ lọc
             </Button>
 
-            <Button size="sm" className="h-9 shadow-sm">
-              Xuất CSV
+            <Button
+              disabled={isFetching}
+              onClick={() => {
+                refetch();
+              }}
+              size="sm"
+              className="h-9 shadow-sm"
+            >
+              <Loader2 className={isFetching ? "animate-spin" : ""} />
+              Làm mới {isLoading && "HIHI"}
             </Button>
           </div>
         </div>

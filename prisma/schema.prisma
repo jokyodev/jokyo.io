@@ -18,11 +18,12 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
-  role       String?
-  banned     Boolean?  @default(false)
-  banReason  String?
-  banExpires DateTime?
-  courses    Course[]
+  role        String?
+  banned      Boolean?     @default(false)
+  banReason   String?
+  banExpires  DateTime?
+  courses     Course[]
+  enrollMents EnrollMent[]
 
   @@unique([email])
   @@map("user")
@@ -78,6 +79,23 @@ model Verification {
   @@map("verification")
 }
 
+model EnrollMent {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  progress Int              @default(0)
+  status   EnrollmentStatus @default(ACTIVE)
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+}
+
 model Course {
   id           String       @id @default(uuid())
   name         String       @unique
@@ -95,9 +113,10 @@ model Course {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
-  chapters  Chapter[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  chapters    Chapter[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  enrollMents EnrollMent[]
 }
 
 model Chapter {
@@ -169,4 +188,10 @@ model SiteConfiguration {
 
   updatedAt DateTime @updatedAt
   updatedBy String? // ID của Admin thực hiện thay đổi
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  DROPPED
 }
