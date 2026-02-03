@@ -25,7 +25,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-import { resetPasswordSchema, ResetPaswordType } from "@/lib/auth-schema";
+import {
+  resetPasswordSchema,
+  ResetPaswordType,
+} from "@/lib/zod-schemas/auth-schema";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 

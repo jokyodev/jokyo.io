@@ -13,8 +13,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { authClient } from "@/lib/auth-client";
+import { ModeToggle } from "@/components/ui/mode-toggle";
 
 const AppHeader = () => {
+  const session = authClient.useSession();
+
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-background/80 backdrop-blur-xl transition-all">
       <div className="flex h-16 items-center justify-between px-4 sm:px-6">
@@ -31,7 +35,7 @@ const AppHeader = () => {
             <p className="text-xs text-muted-foreground mt-1">
               Chào mừng,{" "}
               <span className="text-primary font-medium">
-                jokyodev@gmail.com
+                {session.data?.user.email || "user@gmail.com"}
               </span>
             </p>
           </div>
@@ -52,15 +56,11 @@ const AppHeader = () => {
         </div>
 
         {/* RIGHT: Actions & Profile */}
-        <div className="flex items-center gap-2 sm:gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative h-9 w-9 rounded-full hover:bg-accent"
-          >
-            <Bell className="h-[18px] w-[18px]" />
-            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-destructive border-2 border-background" />
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button variant="outline" className="relative">
+            <Bell />
           </Button>
+          <ModeToggle />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -69,9 +69,15 @@ const AppHeader = () => {
                 className="relative h-9 w-9 rounded-full select-none"
               >
                 <Avatar className="h-9 w-9 border border-border shadow-sm">
-                  <AvatarImage src="https://github.com/shadcn.png" alt="User" />
+                  <AvatarImage
+                    src={
+                      session.data?.user.image ??
+                      "https://github.com/shadcn.png"
+                    }
+                    alt="User"
+                  />
                   <AvatarFallback className="bg-primary/10 text-primary">
-                    JD
+                    J
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -79,9 +85,11 @@ const AppHeader = () => {
             <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Jokyodev</p>
+                  <p className="text-sm font-medium leading-none">
+                    {session.data?.user.name}
+                  </p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    jokyodev@gmail.com
+                    {session.data?.user.email}
                   </p>
                 </div>
               </DropdownMenuLabel>

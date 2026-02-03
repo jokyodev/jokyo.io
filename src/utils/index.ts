@@ -1,8 +1,14 @@
+export const getImageUrl = (imageId: string) => {
+  const url = `${process.env.NEXT_PUBLIC_BUNNY_IMAGES_CDN}/${imageId}`;
+  return url;
+};
+
 export const getVideoUrl = (videoId: string) => {
   const url = `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID}/${videoId}?autoplay=true&loop=false&muted=false&preload=true&responsive=true`;
 
   return url;
 };
+
 export const getFileDuration = (file: File): Promise<number> => {
   return new Promise((resolve) => {
     const video = document.createElement("video");
@@ -35,4 +41,15 @@ export const formatDuration = (seconds: number) => {
 
   // 4. Nếu ít hơn 1 phút: "X giây"
   return `${s} giây`;
+};
+
+export const formatPrice = (price: number | null | undefined) => {
+  if (!price || price === 0) return "Free";
+
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  })
+    .format(price)
+    .replace("₫", ""); // Lấy số, bỏ ₫ để ta tự format UI cho đẹp
 };

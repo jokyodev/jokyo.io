@@ -99,7 +99,7 @@ model EnrollMent {
 model Course {
   id           String       @id @default(uuid())
   name         String       @unique
-  slug         String
+  slug         String       @unique
   subTitle     String
   description  String
   thumbnailKey String

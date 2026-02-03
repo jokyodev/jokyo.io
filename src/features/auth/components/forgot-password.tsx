@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import {
   forgotPasswordSchema,
   ForgotPasswordSchemaType,
-} from "@/lib/auth-schema";
+} from "@/lib/zod-schemas/auth-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2Icon, Loader, Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";

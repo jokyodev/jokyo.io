@@ -65,6 +65,7 @@ const CourseList = () => {
                 </TableCell>
               </TableRow>
             ) : (
+              courses &&
               courses?.map((course) => (
                 <CourseItem key={course.id} course={course} />
               ))

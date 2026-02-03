@@ -48,7 +48,7 @@ const SignupForm = () => {
         password: values.password,
       },
       {
-        onSuccess: () => router.push("/"),
+        onSuccess: () => router.push("/dashboard"),
         onError: (error) => {
           let msg = "";
           switch (error.error.code) {
