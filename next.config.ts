@@ -1,7 +1,19 @@
 import type { NextConfig } from "next";
+import withBundleAnalyzer from "@next/bundle-analyzer";
+
+// Cấu hình Analyzer
+const analyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 const nextConfig: NextConfig = {
   devIndicators: false,
+
+  // Cấu hình ép giảm RAM khi Dev
+  experimental: {
+    workerThreads: false,
+    cpus: 1,
+  },
 
   images: {
     remotePatterns: [
@@ -17,4 +29,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Xuất cấu hình đã được bao bọc bởi analyzer
+export default analyzer(nextConfig);

@@ -37,4 +37,37 @@ export const clientCourseRouter = createTRPCRouter({
         },
       });
     }),
+
+  checkEnrollment: protectedProcedure
+    .input(
+      z.object({
+        courseId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return prisma.enrollMent.findFirst({
+        where: {
+          userId: ctx.auth.user.id,
+          courseId: input.courseId,
+        },
+        include: {
+          course: true,
+        },
+      });
+    }),
+
+  enroll: protectedProcedure
+    .input(
+      z.object({
+        courseId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return prisma.enrollMent.create({
+        data: {
+          userId: ctx.auth.user.id,
+          courseId: input.courseId,
+        },
+      });
+    }),
 });

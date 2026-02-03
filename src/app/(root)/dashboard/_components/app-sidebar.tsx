@@ -79,7 +79,7 @@ const AppSidebar = () => {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-lg font-black tracking-tighter">
-                    Jokyo<span className="text-primary">.Edu</span>
+                    Jokyo Academy
                   </span>
                   <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     Student Portal
@@ -133,13 +133,6 @@ const AppSidebar = () => {
                         {/* Chỉ báo Active Senior */}
                         {isActive && (
                           <div className="absolute left-0 h-5 w-1 rounded-r-full bg-primary" />
-                        )}
-
-                        {/* Ví dụ về Badge (như số lượng khóa học mới hoặc streak) */}
-                        {item.title === "Bảng điều khiển" && (
-                          <div className="ml-auto flex items-center gap-1 bg-orange-500/10 text-orange-600 px-1.5 py-0.5 rounded-md text-[10px] font-black">
-                            <Flame className="size-3 fill-orange-500" />5
-                          </div>
                         )}
                       </Link>
                     </SidebarMenuButton>

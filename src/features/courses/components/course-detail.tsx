@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { formatPrice, getImageUrl, getVideoUrl } from "@/utils";
 import CourseEnrollChecker from "./course-enroll-checker";
+import ChapterList from "./chapter-list";
 
 type CourseType = RouterOutputs["clientCourse"]["getOne"];
 
@@ -46,14 +47,17 @@ const CourseDetail = ({ course }: iAppProps) => {
             <CardDescription>{course?.subTitle}</CardDescription>
           </CardHeader>
           <CardContent>
-            <CardTitle>Mô tả khóa học</CardTitle>
             <CourseDescription content={course?.description} />
+
+            <ChapterList chapters={course?.chapters} />
           </CardContent>
         </Card>
         <Card className="border py-5 sticky top-5">
           <CardHeader>
-            Đăng ký khóa học
-            <img src={getImageUrl(course?.thumbnailKey || "")} />
+            <img
+              src={getImageUrl(course?.thumbnailKey || "")}
+              className="rounded-md"
+            />
           </CardHeader>
           <CardContent className="space-y-6">
             {/* 1. THÔNG TIN KHÓA HỌC: Lấy trực tiếp từ props `course` đã được cache ở Server */}
@@ -92,7 +96,10 @@ const CourseDetail = ({ course }: iAppProps) => {
             {/* Component này sẽ gọi tRPC client bên trong nó */}
             {/* <EnrollmentActions courseId={course.id} price={course.price} /> */}
 
-            <CourseEnrollChecker />
+            <CourseEnrollChecker
+              courseId={course?.id || ""}
+              courseSlug={course?.slug || ""}
+            />
 
             <p className="text-[10px] text-center text-muted-foreground italic">
               Đảm bảo an toàn 100%. Thanh toán qua chuyển khoản hoặc ví điện tử.

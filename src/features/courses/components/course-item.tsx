@@ -26,7 +26,7 @@ const CourseItem = ({ course }: iAppProps) => {
   return (
     <div className="group relative bg-card rounded-sm border border-border/50 overflow-hidden transition-all duration-500 ">
       {/* Thumbnail Section */}
-      <div className="relative aspect-16/10 overflow-hidden m-2 rounded-sm">
+      <div className="relative  overflow-hidden m-2 rounded-sm">
         <img
           src={`${process.env.NEXT_PUBLIC_BUNNY_IMAGES_CDN}/${course.thumbnailKey}`}
           alt={course.name}

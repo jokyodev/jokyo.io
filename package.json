@@ -3,16 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "analyze": "cross-env ANALYZE=true next build",
     "prisma": {
       "seed": "ts-node prisma/seed.ts"
     }
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@next/bundle-analyzer": "^16.1.6",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "@radix-ui/react-accordion": "^1.2.12",
