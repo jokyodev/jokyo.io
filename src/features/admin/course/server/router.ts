@@ -8,6 +8,7 @@ import {
   courseStatus,
 } from "@/lib/zod-schemas/course-schema";
 import { lessonSchema } from "@/lib/zod-schemas/lesson-schema";
+import slugify from "slugify";
 export const categoryRouter = createTRPCRouter({
   getAll: adminProcedure.query(async () => {
     return prisma.category.findMany();
@@ -191,6 +192,10 @@ export const chapterRouter = createTRPCRouter({
             courseId: input.courseId,
             externalLink: input?.externalLink,
             position: newPosition,
+            slug: slugify(input.name, {
+              lower: true,
+              strict: true,
+            }),
           },
         });
       });

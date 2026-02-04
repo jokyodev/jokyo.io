@@ -103,7 +103,7 @@ const VideoUploader = ({ value, onComplete }: iAppProps) => {
   };
 
   return (
-    <div className="w-full h-165 bg-zinc-900 border-2 border-dashed border-zinc-700 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer relative overflow-hidden ">
+    <div className="w-full h-165 dark:bg-zinc-900 border-2 border-dashed dark:border-zinc-700 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer relative overflow-hidden ">
       {!file && !value ? (
         <>
           <div className="flex flex-col items-center">
@@ -115,7 +115,7 @@ const VideoUploader = ({ value, onComplete }: iAppProps) => {
             </div>
 
             <div className="text-center space-y-2 px-6">
-              <h3 className="text-zinc-200 font-semibold text-lg">
+              <h3 className=" font-semibold text-lg">
                 Tải lên bài giảng Video
               </h3>
               <p className="text-zinc-500 text-sm max-w-[320px]">
@@ -155,7 +155,7 @@ const VideoUploader = ({ value, onComplete }: iAppProps) => {
           </div>
 
           <div className="absolute top-5 left-5 z-100">
-            <div className="w-15 py-2.5 bg-zinc-800 rounded-lg border flex flex-col items-center justify-center gap-3">
+            <div className="w-15 py-2.5 dark:bg-zinc-800 rounded-lg border flex flex-col items-center justify-center gap-3">
               <Button
                 disabled={createVideo.isPending || value?.length != 0}
                 type="button"
@@ -196,7 +196,7 @@ const VideoUploader = ({ value, onComplete }: iAppProps) => {
           ></video>
 
           <div className="absolute top-5 left-5 z-100">
-            <div className="w-15 py-2.5 bg-zinc-800 rounded-lg border flex flex-col items-center justify-center gap-3">
+            <div className="w-15 py-2.5 dark:bg-zinc-800 rounded-lg border flex flex-col items-center justify-center gap-3">
               <Button
                 disabled={createVideo.isPending || value?.length != 0}
                 type="button"

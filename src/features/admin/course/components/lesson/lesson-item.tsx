@@ -78,10 +78,10 @@ const LessonItem = ({ courseId, lesson }: iAppProps) => {
   return (
     <div
       key={lesson.id}
-      className="flex items-center justify-between gap-x-2  border  p-3 rounded-lg text-sm group bg-zinc-800 hover:bg-zinc-700 transition-all duration-200 cursor-pointer"
+      className="flex items-center justify-between gap-x-2  border  p-3 rounded-lg text-sm group bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 transition-all duration-200 cursor-pointer"
     >
       <div className="flex items-center gap-2">
-        <PlayCircle className="h-4 w-4  group-hover:text-zinc-300 transition" />
+        <PlayCircle className="h-4 w-4   transition" />
         <span className="font-medium  truncate">{lesson.name}</span>
       </div>
 

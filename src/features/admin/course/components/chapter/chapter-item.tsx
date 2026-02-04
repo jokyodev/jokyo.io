@@ -30,7 +30,7 @@ const ChapterItem = ({ chapter }: iAppProps) => {
         <AccordionTrigger className="hover:no-underline py-4 flex-1">
           <div className="flex items-center gap-x-2">
             <span className="flex items-center justify-center h-6 w-6 rounded-full  text-[10px] font-bold">
-              {chapter.position + 1}
+              {chapter.position}
             </span>
             <p className="font-semibold text-sm ">{chapter.name}</p>
           </div>

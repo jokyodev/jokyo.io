@@ -1,21 +1,5 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  Eye,
-  GripVertical,
-  Link2,
-  Pencil,
-  PlayCircle,
-  Trash,
-} from "lucide-react";
-import RemoveChapter from "./remove-chapter";
-import Link from "next/link";
-import NewLesson from "../lesson/new-lesson";
+import { Accordion } from "@/components/ui/accordion";
+
 import ChapterItem from "./chapter-item";
 
 interface iAppProps {

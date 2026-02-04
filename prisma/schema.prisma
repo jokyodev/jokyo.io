@@ -18,15 +18,33 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
-  role        String?
-  banned      Boolean?     @default(false)
-  banReason   String?
-  banExpires  DateTime?
-  courses     Course[]
-  enrollMents EnrollMent[]
+  role           String?
+  banned         Boolean?       @default(false)
+  banReason      String?
+  banExpires     DateTime?
+  courses        Course[]
+  enrollMents    EnrollMent[]
+  userProgresses UserProgress[]
 
   @@unique([email])
   @@map("user")
+}
+
+model UserProgress {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lessonId    String
+  lesson      Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  isCompleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([lessonId])
 }
 
 model Session {
@@ -121,7 +139,8 @@ model Course {
 
 model Chapter {
   id           String   @id @default(uuid())
-  name         String
+  name         String   @unique
+  slug         String   @unique
   courseId     String
   course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons      Lesson[]
@@ -143,8 +162,11 @@ model Lesson {
   status   LessonStatus @default(PRIVATE)
   duration Int          @default(0)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  userProgresses UserProgress[]
+
+  @@unique([chapterId, position])
 }
 
 model Category {
@@ -185,9 +207,9 @@ model SiteConfiguration {
 
   // Tính năng nâng cao
   bypassTokens String[] @default([]) // Các mã Token để truy cập web ngay cả khi đang bảo trì
-
-  updatedAt DateTime @updatedAt
-  updatedBy String? // ID của Admin thực hiện thay đổi
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  updatedBy    String? // ID của Admin thực hiện thay đổi
 }
 
 enum EnrollmentStatus {
