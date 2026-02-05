@@ -8,7 +8,8 @@ import z from "zod";
 import { CACHE_KEYS } from "@/lib/cache-keys";
 import { redis } from "@/lib/redis";
 import { Prisma } from "@/generated/prisma/client";
-// 1. Định nghĩa object select
+
+// --- SELECTORS ---
 export const courseDetailSelect = {
   id: true,
   name: true,
@@ -32,59 +33,74 @@ export const courseDetailSelect = {
         },
       },
     },
+    orderBy: { position: "asc" }, // Nên order luôn ở server
   },
 } satisfies Prisma.CourseSelect;
 
-type Course = Prisma.CourseGetPayload<{
+export const courseSelect = {
+  id: true,
+  name: true,
+  price: true,
+  subTitle: true,
+  thumbnailKey: true,
+  slug: true,
+} satisfies Prisma.CourseSelect;
+
+// --- TYPES --- (Sửa lại kiểu Array cho đúng)
+type CourseDetail = Prisma.CourseGetPayload<{
   select: typeof courseDetailSelect;
 }>;
+type CourseListItem = Prisma.CourseGetPayload<{ select: typeof courseSelect }>;
 
 export const clientCourseRouter = createTRPCRouter({
-  getAll: baseProcedure.query(async () => {
-    return prisma.course.findMany({
-      where: {
-        status: "PUBLISH",
-      },
-      include: {
-        user: true,
-      },
+  // FIX: Đảm bảo luôn trả về Mảng để Client dùng được .map()
+  getAll: protectedProcedure.query(async () => {
+    const cacheKey = CACHE_KEYS.course.all;
+
+    // Ép kiểu mảng ở đây: <CourseListItem[]>
+    const cachedCourses = await redis.get<CourseListItem[]>(cacheKey);
+    if (cachedCourses) return cachedCourses;
+
+    const courses = await prisma.course.findMany({
+      where: { status: "PUBLISH" },
+      select: courseSelect,
     });
+
+    if (courses.length > 0) {
+      await redis.set(cacheKey, courses, { ex: 10000 });
+    }
+
+    return courses || [];
   }),
+
   getOne: baseProcedure
-    .input(
-      z.object({
-        slug: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ input }) => {
       const cacheKey = CACHE_KEYS.course.detail(input.slug);
-      console.log(cacheKey);
-      let course = await redis.get<Course>(cacheKey);
+      let course = await redis.get<CourseDetail>(cacheKey);
 
       if (!course) {
         course = await prisma.course.findUnique({
-          where: {
-            slug: input.slug,
-          },
+          where: { slug: input.slug },
           select: courseDetailSelect,
         });
+
+        if (course) {
+          await redis.set(cacheKey, course, { ex: 24 * 60 * 60 });
+        }
       }
-      if (!course) return null;
-      await redis.set(cacheKey, course, { ex: 24 * 60 * 60 });
-      return course;
+
+      return course; // Có thể là null, Client check if(!data)
     }),
 
   checkEnrollment: protectedProcedure
-    .input(
-      z.object({
-        courseId: z.string(),
-      }),
-    )
+    .input(z.object({ courseId: z.string() }))
     .query(async ({ ctx, input }) => {
       const cacheKey = `user:${ctx.auth.user.id}:course:${input.courseId}:enrolled`;
 
-      const cached = await redis.get(cacheKey);
-      if (cached !== null) return cached === "true";
+      const cached = await redis.get<any>(cacheKey);
+      // Nếu có cache, trả về luôn (Object hoặc null đã stringify)
+      if (cached !== null) return cached;
 
       const enrollment = await prisma.enrollMent.findUnique({
         where: {
@@ -94,28 +110,105 @@ export const clientCourseRouter = createTRPCRouter({
           },
         },
       });
-      const hasAccess = !!enrollment;
 
-      await redis.set(cacheKey, String(hasAccess), { ex: 3600 });
+      // Lưu nguyên object enrollment hoặc null vào redis
+      await redis.set(cacheKey, enrollment, { ex: 3600 });
 
-      return hasAccess;
+      return enrollment;
     }),
 
   enroll: protectedProcedure
-    .input(
-      z.object({
-        courseId: z.string(),
-      }),
-    )
+    .input(z.object({ courseId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const cacheKey = `user:${ctx.auth.user.id}:course:${input.courseId}:enrolled`;
-      await redis.del(cacheKey);
 
-      return prisma.enrollMent.create({
+      // Tạo bản ghi trước
+      const newEnroll = await prisma.enrollMent.create({
         data: {
           userId: ctx.auth.user.id,
           courseId: input.courseId,
         },
       });
+
+      // Xóa cache ngay sau khi tạo thành công
+      await redis.del(cacheKey);
+
+      return newEnroll;
+    }),
+
+  purchasedCourses: protectedProcedure.query(async ({ ctx }) => {
+    const enrollments = await prisma.enrollMent.findMany({
+      where: {
+        userId: ctx.auth.user.id,
+      },
+      include: {
+        course: true,
+      },
+    });
+    const courses = enrollments.map((e) => e.course);
+    return courses;
+  }),
+
+  getContinueLesson: protectedProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ ctx, input }) => {
+      // 1. Tìm Course ID từ Slug
+      const course = await prisma.course.findUnique({
+        where: { slug: input.slug },
+        select: { id: true },
+      });
+      if (!course) return null;
+
+      // 2. Kiểm tra Enrollment
+      const enrollment = await prisma.enrollMent.findUnique({
+        where: {
+          userId_courseId: { userId: ctx.auth.user.id, courseId: course.id },
+        },
+      });
+      if (!enrollment) return null;
+
+      // 3. ƯU TIÊN 1: Tìm bản ghi tiến độ MỚI NHẤT (bất kể hoàn thành hay chưa)
+      // Cái này giúp user quay lại đúng cái họ vừa tắt trình duyệt xong
+      const lastActivity = await prisma.userProgress.findFirst({
+        where: {
+          userId: ctx.auth.user.id,
+          lesson: { chapter: { courseId: course.id } },
+        },
+        orderBy: { updatedAt: "desc" },
+        include: {
+          lesson: {
+            select: {
+              id: true,
+              chapter: { select: { slug: true } },
+            },
+          },
+        },
+      });
+
+      if (lastActivity) {
+        return {
+          lessonId: lastActivity.lesson.id,
+          chapterSlug: lastActivity.lesson.chapter.slug,
+          startPosition: lastActivity.lastPosition,
+        };
+      }
+
+      // 4. ƯU TIÊN 2: Nếu chưa có tiến độ gì, lấy bài đầu tiên của khóa học
+      const firstLesson = await prisma.lesson.findFirst({
+        where: { chapter: { courseId: course.id } },
+        orderBy: [{ chapter: { position: "asc" } }, { position: "asc" }],
+        select: {
+          id: true,
+          chapter: { select: { slug: true } },
+        },
+      });
+
+      if (!firstLesson) return null;
+
+      return {
+        lessonId: firstLesson.id,
+        chapterSlug: firstLesson.chapter.slug,
+        startPosition: 0,
+      };
     }),
 });

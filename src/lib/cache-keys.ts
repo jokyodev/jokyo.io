@@ -4,6 +4,7 @@ export const CACHE_KEYS = {
     detail: (slug: string) => `course:v1:detail:${slug}`,
     structure: (slug: string) => `course:v1:structure:${slug}`,
     content: (id: string) => `course:v1:lesson:${id}`,
+    all: `course:v1`,
   },
   user: {
     progress: (userId: string, courseSlug: string) =>

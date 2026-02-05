@@ -1,16 +1,14 @@
+"use client";
+import LoadingSpinner from "@/components/loading-spinner";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useTRPC } from "@/trpc/client";
+
 import { RouterOutputs } from "@/trpc/init";
-import {
-  PlayCircle,
-  Star,
-  TrendingUp,
-  ArrowUpRight,
-  Clock,
-  Sparkle,
-} from "lucide-react";
-import { formatPrice } from "@/utils";
+import { useQuery } from "@tanstack/react-query";
+import { Star, Clock, MoveRight } from "lucide-react";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type CourseType = RouterOutputs["clientCourse"]["getAll"][number];
 
@@ -18,10 +16,26 @@ interface iAppProps {
   course: CourseType;
 }
 
-const CourseItem = ({ course }: iAppProps) => {
-  // Giả sử có dữ liệu rating, bạn có thể thay bằng data thực tế
+const PurchasedItem = ({ course }: iAppProps) => {
   const rating = 4.9;
-  const isBestSeller = true;
+  const trpc = useTRPC();
+  const router = useRouter();
+  // 1. Lấy options
+  const continueLessonOptions =
+    trpc.clientCourse.getContinueLesson.queryOptions({
+      slug: course.slug,
+    });
+
+  // 2. Truyền vào useQuery để thực sự lấy DATA
+  const { data: continueLesson, isLoading } = useQuery(continueLessonOptions);
+
+  // 3. Bây giờ ông mới dùng được continueLesson
+  console.log(continueLesson?.lessonId);
+
+  const handleStartLearn = () => {
+    const url = `/learn/${course.slug}/${continueLesson?.lessonId}`;
+    router.push(url);
+  };
 
   return (
     <div className="group relative bg-card rounded-sm border border-border/50 overflow-hidden transition-all duration-500 ">
@@ -58,35 +72,14 @@ const CourseItem = ({ course }: iAppProps) => {
 
         {/* Footer: Price & Action */}
         <div className="flex items-center justify-between pt-4 border-t border-border/50">
-          <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-              Giá
-            </span>
-            <div className="flex items-baseline gap-0.5 font-black">
-              <span className="text-2xl tracking-tighter text-foreground">
-                {Number(course.price) === 0
-                  ? "Free"
-                  : formatPrice(Number(course.price) ?? 0)}
-              </span>
-
-              {Number(course.price) !== 0 && (
-                <span className="text-sm font-bold text-muted-foreground ml-0.5">
-                  ₫
-                </span>
-              )}
-            </div>
-          </div>
-
-          <Link
-            href={`/dashboard/course/${course.slug}`}
-            className={buttonVariants({})}
-          >
-            Chi tiết
-          </Link>
+          <Button onClick={handleStartLearn} disabled={isLoading}>
+            <MoveRight />
+            Vào học
+          </Button>
         </div>
       </div>
     </div>
   );
 };
 
-export default CourseItem;
+export default PurchasedItem;

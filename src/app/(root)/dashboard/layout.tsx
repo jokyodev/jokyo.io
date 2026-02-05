@@ -13,7 +13,7 @@ const Layout = async ({ children }: { children: ReactNode }) => {
         <AppSidebar />
         <main className="w-full">
           <AppHeader />
-          {children}
+          <div className="p-6">{children}</div>
         </main>
       </SidebarProvider>
     </MaintenanceProvider>

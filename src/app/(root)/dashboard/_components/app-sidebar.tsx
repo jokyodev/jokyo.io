@@ -8,9 +8,7 @@ import {
   MessageSquare,
   History,
   Heart,
-  Settings,
   HelpCircle,
-  Flame,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -33,8 +31,12 @@ const studentMenuItems = [
   {
     label: "Cá nhân",
     items: [
-      { title: "Bảng điều khiển", icon: LayoutDashboard, href: "/dashboard" },
-      { title: "Khóa học của tôi", icon: GraduationCap, href: "/my-courses" },
+      { title: "Khóa học hiện có", icon: LayoutDashboard, href: "/dashboard" },
+      {
+        title: "Khóa học đã mua",
+        icon: GraduationCap,
+        href: "/dashboard/my-courses",
+      },
       { title: "Lịch sử học tập", icon: History, href: "/history" },
     ],
   },
