@@ -8,11 +8,11 @@ import {
 import { CourseBreadcrumb } from "./breadcrumb";
 
 import { RouterOutputs } from "@/trpc/init";
-import { cn } from "@/lib/utils";
+
 import CourseDescription from "./course-description";
-import { Button } from "@/components/ui/button";
+
 import { CheckCircle } from "lucide-react";
-import { formatPrice, getImageUrl, getVideoUrl } from "@/utils";
+import { formatPrice, getImageUrl } from "@/utils";
 import CourseEnrollChecker from "./course-enroll-checker";
 import ChapterList from "./chapter-list";
 

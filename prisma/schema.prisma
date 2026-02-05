@@ -35,12 +35,13 @@ model UserProgress {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  lessonId    String
-  lesson      Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  isCompleted Boolean @default(false)
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isCompleted  Boolean  @default(false)
+  lastPosition Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@unique([userId, lessonId])
   @@index([userId])

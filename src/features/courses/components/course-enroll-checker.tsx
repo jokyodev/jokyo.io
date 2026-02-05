@@ -1,9 +1,10 @@
 "use client";
-import { Button, buttonVariants } from "@/components/ui/button";
+
+import { Button } from "@/components/ui/button";
 import { useTRPC } from "@/trpc/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { Loader2, PlayCircle, PlusCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 interface iAppProps {
@@ -13,48 +14,85 @@ interface iAppProps {
 
 const CourseEnrollChecker = ({ courseId, courseSlug }: iAppProps) => {
   const trpc = useTRPC();
+  const router = useRouter();
 
-  const { data: enrollMent, isLoading } = useQuery(
-    trpc.clientCourse.checkEnrollment.queryOptions({
-      courseId: courseId,
-    }),
+  // 1. Check xem đã mua chưa
+  const { data: enrollment, isLoading: isCheckingEnroll } = useQuery(
+    trpc.clientCourse.checkEnrollment.queryOptions({ courseId }),
   );
-  const enroll = useMutation(
+
+  // 2. Lấy bài học để "Học tiếp" (Chỉ thực sự cần khi đã enroll)
+  const { data: continueLesson, isLoading: isFetchingProgress } = useQuery({
+    ...trpc.learnRouter.getContinueLesson.queryOptions({
+      slug: courseSlug,
+    }),
+    enabled: !!enrollment, // Thêm các option khác ở đây
+  });
+
+  // 3. Mutation đăng ký
+  const enrollMutation = useMutation(
     trpc.clientCourse.enroll.mutationOptions({
       onSuccess: () => {
-        toast.success("Đăng ký khóa học thành công");
+        toast.success("Đăng ký khóa học thành công!");
+        // Sau khi mua xong có thể invalidate query hoặc đơn giản là để nó tự refetch
+      },
+      onError: (err) => {
+        toast.error(err.message || "Có lỗi xảy ra khi đăng ký");
       },
     }),
   );
+
+  const handleStartLearn = () => {
+    if (!continueLesson?.lessonId) {
+      toast.error("Không tìm thấy bài học phù hợp");
+      return;
+    }
+    router.push(`/learn/${courseSlug}/${continueLesson.lessonId}`);
+  };
+
+  // Trạng thái Loading ban đầu khi chưa biết User có quyền hay không
+  if (isCheckingEnroll) {
+    return (
+      <Button disabled className="w-full bg-slate-100 text-slate-400">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        Đang kiểm tra...
+      </Button>
+    );
+  }
+
   return (
-    <div>
-      {!enrollMent ? (
+    <div className="w-full">
+      {<pre>{JSON.stringify(enrollment)}</pre>}
+      {!enrollment ? (
+        // NÚT ĐĂNG KÝ
         <Button
-          disabled={enroll.isPending}
-          onClick={() => {
-            enroll.mutate({
-              courseId: courseId,
-            });
-          }}
-          className="w-full"
+          disabled={enrollMutation.isPending}
+          onClick={() => enrollMutation.mutate({ courseId })}
+          className="w-full font-bold transition-all active:scale-95"
+          size="lg"
         >
-          {isLoading ? (
-            <>
-              <Loader2 className="animate-spin w-4 h-4" />
-            </>
+          {enrollMutation.isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <>Đăng ký khóa học</>
+            <PlusCircle className="mr-2 h-4 w-4" />
           )}
+          Đăng ký khóa học
         </Button>
       ) : (
-        <Link
-          href={`/learn/${courseSlug}`}
-          className={buttonVariants({
-            className: "w-full",
-          })}
+        // NÚT VÀO HỌC
+        <Button
+          disabled={isFetchingProgress}
+          onClick={handleStartLearn}
+          className="w-full font-bold bg-green-600 hover:bg-green-700 transition-all active:scale-95"
+          size="lg"
         >
-          Vào học ngay
-        </Link>
+          {isFetchingProgress ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <PlayCircle className="mr-2 h-4 w-4" />
+          )}
+          {continueLesson ? "Vào học ngay" : "Bắt đầu học"}
+        </Button>
       )}
     </div>
   );
