@@ -83,7 +83,7 @@ export default function CourseContent({
               value={chapter.id}
               className="border bg-card overflow-hidden transition-shadow"
             >
-              <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-accent/50 transition-colors">
+              <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-accent/50 transition-colors border-b">
                 <div className="flex items-start gap-4 text-left w-full">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary font-semibold">
                     {index + 1}
@@ -110,9 +110,9 @@ export default function CourseContent({
                         href={`/learn/${courseSlug}/${lesson.id}`}
                         key={lesson.id}
                         scroll={false}
-                        className={`group flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
+                        className={`group flex items-center gap-3 p-3  border transition-all cursor-pointer ${
                           currentLesson
-                            ? "border-green-500 bg-green-100"
+                            ? "border-green-600 bg-green-200"
                             : "bg-zinc-100 dark:bg-zinc-800"
                         }`}
                       >
