@@ -53,13 +53,13 @@ export const adminProcedure = baseProcedure.use(async ({ ctx, next }) => {
       message: "Người dùng chưa đăng nhập",
     });
   }
-  // const isAdmin = session.user.role === "admin";
-  // if (!isAdmin) {
-  //   throw new TRPCError({
-  //     code: "BAD_REQUEST",
-  //     message: "Không đủ quyền để truy cập",
-  //   });
-  // }
+  const isAdmin = session.user.role === "admin";
+  if (!isAdmin) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Không đủ quyền để truy cập",
+    });
+  }
   return next({
     ctx: {
       ...ctx,

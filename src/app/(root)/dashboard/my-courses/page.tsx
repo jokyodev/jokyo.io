@@ -13,10 +13,9 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ArrowUpRightIcon, Folder } from "lucide-react";
 import Link from "next/link";
-import { buttonGroupVariants } from "@/components/ui/button-group";
+
 const Page = async () => {
   const purchasedCourses = await caller.clientCourse.purchasedCourses();
-
   const safeCourses = JSON.parse(JSON.stringify(purchasedCourses));
 
   return (

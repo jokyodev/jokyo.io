@@ -1,5 +1,9 @@
+import CourseVideo from "@/features/learn/components/course-video";
+import { caller } from "@/trpc/server";
+import { redirect } from "next/navigation";
+
 type Params = Promise<{
-  lessonId: String;
+  lessonId: string;
 }>;
 interface iAppProps {
   params: Params;
@@ -8,7 +12,16 @@ interface iAppProps {
 const Page = async ({ params }: iAppProps) => {
   const { lessonId } = await params;
 
-  return <div>{lessonId}</div>;
+  const lesson = await caller.learnRouter.getLesson({
+    lessonId: lessonId,
+  });
+  if (!lesson) return redirect("/dashboard");
+
+  return (
+    <div>
+      <CourseVideo lessonName={lesson.name} videoKey={lesson.videoKey!} />
+    </div>
+  );
 };
 
 export default Page;

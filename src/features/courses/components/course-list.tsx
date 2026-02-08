@@ -9,7 +9,7 @@ interface iAppProps {
 const CourseList = ({ courses }: iAppProps) => {
   return (
     <div className="">
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 mt-7">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 mt-7 gap-5">
         {courses.map((course: any) => {
           return <CourseItem key={course.id} course={course} />;
         })}

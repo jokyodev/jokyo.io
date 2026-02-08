@@ -1,88 +1,163 @@
+"use client";
+
+import * as React from "react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-
-import { Prisma } from "@/generated/prisma/client"; // Sử dụng @prisma/client chuẩn
+import { RouterOutputs } from "@/trpc/init";
+import { Play, Clock, CheckCircle2, AudioLines } from "lucide-react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { formatDuration } from "@/utils";
 
-import { PlayCircle, Lock } from "lucide-react";
-import Link from "next/link";
-
-// BƯỚC 1: Định nghĩa Type-safe cho dữ liệu lồng nhau
-type ChapterWithLessons = Prisma.ChapterGetPayload<{
-  include: {
-    lessons: true;
-  };
-}>;
-type Lesson = ChapterWithLessons["lessons"][0];
+type ChaptersAndLessons = RouterOutputs["learnRouter"]["getChaptersAndLessons"];
 
 interface iAppProps {
-  chapters: ChapterWithLessons[];
+  chaptersAndLessons: ChaptersAndLessons;
+  courseSlug: string;
 }
 
-const CourseContent = ({ chapters }: iAppProps) => {
-  return (
-    <aside className="sticky top-10  w-full overflow-y-auto border-l  scrollbar-hide">
-      <div className="rounded-none border-none bg-transparent shadow-none py-0">
-        {/* Header sidebar cố định bên trong vùng scroll */}
+export default function CourseContent({
+  chaptersAndLessons,
+  courseSlug,
+}: iAppProps) {
+  const params = useParams<{ lessonId?: string }>();
+  const lessonId = params.lessonId;
 
-        <div className="p-3.5 flex items-center justify-between border-b sticky top-0 z-10 bg-white dark:bg-zinc-800 ">
-          <p className="font-medium text-base uppercase">Nội dung khóa học</p>
-          <small className="text-xs bg-zinc-500 text-zinc-100 px-3 py-1 rounded-sm">
-            {chapters.length} Chương
-          </small>
-        </div>
-        <Accordion type="multiple" className="w-full space-y-0">
-          {chapters.map((chapter) => (
+  // ✅ chapter hiện tại đang chứa lessonId
+  const currentChapterId = React.useMemo(() => {
+    if (!lessonId) return "";
+
+    const chapter = chaptersAndLessons?.chapters.find((ch) =>
+      ch.lessons.some((ls) => ls.id === lessonId),
+    );
+
+    return chapter?.id ?? "";
+  }, [chaptersAndLessons, lessonId]);
+
+  // ✅ MULTIPLE => value phải là string[]
+  const [openChapters, setOpenChapters] = React.useState<string[]>([]);
+
+  // ✅ mỗi lần đổi lesson => đảm bảo chapter chứa lesson đó đang mở
+  React.useEffect(() => {
+    if (!currentChapterId) return;
+
+    setOpenChapters((prev) => {
+      // nếu đã mở rồi thì thôi
+      if (prev.includes(currentChapterId)) return prev;
+
+      // thêm chapter hiện tại vào list
+      return [...prev, currentChapterId];
+    });
+  }, [currentChapterId]);
+
+  const totalLessons =
+    chaptersAndLessons?.chapters.reduce(
+      (acc, ch) => acc + ch.lessons.length,
+      0,
+    ) ?? 0;
+
+  return (
+    <div className="flex-2 p-2 space-y-3">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-2">Nội dung khóa học</h2>
+        <p className="text-sm text-muted-foreground">
+          {chaptersAndLessons?.chapters.length ?? 0} chương • {totalLessons} bài
+          học
+        </p>
+      </div>
+
+      <Accordion
+        type="multiple"
+        className="space-y-1"
+        value={openChapters}
+        onValueChange={setOpenChapters}
+      >
+        {chaptersAndLessons?.chapters.map((chapter, index) => {
+          return (
             <AccordionItem
               key={chapter.id}
               value={chapter.id}
-              className="border-b bg-background/50"
+              className="border bg-card overflow-hidden transition-shadow"
             >
-              <AccordionTrigger className="px-4 py-3 hover:bg-slate-100/80 hover:no-underline transition-all">
-                <div className="flex flex-col items-start gap-1">
-                  <span className="text-sm font-semibold text-slate-700 text-left line-clamp-1">
-                    {chapter.name}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-muted-foreground font-medium">
+              <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-accent/50 transition-colors">
+                <div className="flex items-start gap-4 text-left w-full">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary font-semibold">
+                    {index + 1}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-semibold mb-1 line-clamp-2">
+                      {chapter.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
                       {chapter.lessons.length} bài học
-                    </span>
+                    </p>
                   </div>
                 </div>
               </AccordionTrigger>
 
-              <AccordionContent className="pb-0 bg-white">
-                <div className="flex flex-col">
-                  {chapter.lessons.map((lesson: Lesson) => (
-                    <Link
-                      key={lesson.id}
-                      href={`/course/learn/${lesson.position}`}
-                      className="group flex items-center gap-3 border-l-4 border-transparent px-6 py-4 transition-all hover:border-blue-500 hover:bg-blue-50/50"
-                    >
-                      <PlayCircle className="h-4 w-4 text-slate-400 group-hover:text-blue-500 transition-colors" />
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-sm text-slate-600 group-hover:text-blue-600 font-medium transition-colors">
-                          {lesson.position}.{lesson.name}
-                        </span>
-                        {/* Ví dụ thêm thời lượng hoặc trạng thái nếu có */}
-                        <span className="text-[10px] text-slate-400">
-                          Video - {formatDuration(lesson.duration)}
-                        </span>
-                      </div>
-                    </Link>
-                  ))}
+              <AccordionContent className="px-5 pb-4">
+                <div className="space-y-1 mt-2">
+                  {chapter.lessons.map((lesson, lessonIndex) => {
+                    const currentLesson = lesson.id === lessonId;
+
+                    return (
+                      <Link
+                        href={`/learn/${courseSlug}/${lesson.id}`}
+                        key={lesson.id}
+                        scroll={false}
+                        className={`group flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
+                          currentLesson
+                            ? "border-green-500 bg-green-100"
+                            : "bg-zinc-100 dark:bg-zinc-800"
+                        }`}
+                      >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted transition-colors">
+                          {currentLesson ? (
+                            <AudioLines size={14} className="text-green-500" />
+                          ) : (
+                            <Play
+                              size={14}
+                              className="text-muted-foreground group-hover:text-primary transition-colors"
+                            />
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className={`text-sm font-medium mb-0.5 line-clamp-1 transition-colors ${
+                              currentLesson ? "text-green-600" : "text-primary"
+                            }`}
+                          >
+                            {lessonIndex + 1}. {lesson.name}
+                          </p>
+
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span
+                              className={`flex items-center gap-1 ${
+                                currentLesson
+                                  ? "text-green-600"
+                                  : "text-zinc-500"
+                              }`}
+                            >
+                              <Clock size={12} />
+                              {formatDuration(lesson.duration) || "10:00"}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               </AccordionContent>
             </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
-    </aside>
+          );
+        })}
+      </Accordion>
+    </div>
   );
-};
-
-export default CourseContent;
+}

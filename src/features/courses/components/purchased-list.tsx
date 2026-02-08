@@ -1,16 +1,6 @@
 import { RouterOutputs } from "@/trpc/init";
-import CourseItem from "./course-item";
+
 import PurchasesItem from "./purchased-item";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { Button } from "@/components/ui/button";
-import { ArrowUpRightIcon, Folder } from "lucide-react";
 
 type CoursesType = RouterOutputs["clientCourse"]["getAll"];
 

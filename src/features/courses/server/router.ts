@@ -7,55 +7,22 @@ import prisma from "@/lib/db";
 import z from "zod";
 import { CACHE_KEYS } from "@/lib/cache-keys";
 import { redis } from "@/lib/redis";
-import { Prisma } from "@/generated/prisma/client";
+import {
+  CourseDetail,
+  courseDetailSelect,
+  CourseListItem,
+  courseSelect,
+  Enrollment,
+  enrollmentSelect,
+} from "../types";
+import { getOrSetCache } from "@/lib/cache";
 
-// --- SELECTORS ---
-export const courseDetailSelect = {
-  id: true,
-  name: true,
-  slug: true,
-  price: true,
-  category: true,
-  subTitle: true,
-  description: true,
-  thumbnailKey: true,
-  chapters: {
-    select: {
-      id: true,
-      name: true,
-      position: true,
-      lessons: {
-        select: {
-          id: true,
-          name: true,
-          position: true,
-          duration: true,
-        },
-      },
-    },
-    orderBy: { position: "asc" }, // Nên order luôn ở server
-  },
-} satisfies Prisma.CourseSelect;
-
-export const courseSelect = {
-  id: true,
-  name: true,
-  price: true,
-  subTitle: true,
-  thumbnailKey: true,
-  slug: true,
-} satisfies Prisma.CourseSelect;
-
-// --- TYPES --- (Sửa lại kiểu Array cho đúng)
-type CourseDetail = Prisma.CourseGetPayload<{
-  select: typeof courseDetailSelect;
-}>;
-type CourseListItem = Prisma.CourseGetPayload<{ select: typeof courseSelect }>;
+import type { EnrollMent } from "@/generated/prisma/client";
 
 export const clientCourseRouter = createTRPCRouter({
   // FIX: Đảm bảo luôn trả về Mảng để Client dùng được .map()
   getAll: protectedProcedure.query(async () => {
-    const cacheKey = CACHE_KEYS.course.all;
+    const cacheKey = "allcourses:v1";
 
     // Ép kiểu mảng ở đây: <CourseListItem[]>
     const cachedCourses = await redis.get<CourseListItem[]>(cacheKey);
@@ -96,31 +63,28 @@ export const clientCourseRouter = createTRPCRouter({
   checkEnrollment: protectedProcedure
     .input(z.object({ courseId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const cacheKey = `user:${ctx.auth.user.id}:course:${input.courseId}:enrolled`;
+      const cacheKey = `user:${ctx.auth.user.id}:course:${input.courseId}:enrolled:v1`;
 
-      const cached = await redis.get<any>(cacheKey);
-      // Nếu có cache, trả về luôn (Object hoặc null đã stringify)
-      if (cached !== null) return cached;
-
-      const enrollment = await prisma.enrollMent.findUnique({
-        where: {
-          userId_courseId: {
-            userId: ctx.auth.user.id,
-            courseId: input.courseId,
-          },
+      return getOrSetCache(
+        cacheKey,
+        60 * 5, // recommend: 5 phút thôi (permission data)
+        async () => {
+          return prisma.enrollMent.findUnique({
+            where: {
+              userId_courseId: {
+                userId: ctx.auth.user.id,
+                courseId: input.courseId,
+              },
+            },
+          });
         },
-      });
-
-      // Lưu nguyên object enrollment hoặc null vào redis
-      await redis.set(cacheKey, enrollment, { ex: 3600 });
-
-      return enrollment;
+      );
     }),
 
   enroll: protectedProcedure
     .input(z.object({ courseId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const cacheKey = `user:${ctx.auth.user.id}:course:${input.courseId}:enrolled`;
+      const cacheKey = `purchasedCourse:v1:${ctx.auth.user.id}`;
 
       // Tạo bản ghi trước
       const newEnroll = await prisma.enrollMent.create({
@@ -137,15 +101,27 @@ export const clientCourseRouter = createTRPCRouter({
     }),
 
   purchasedCourses: protectedProcedure.query(async ({ ctx }) => {
-    const enrollments = await prisma.enrollMent.findMany({
+    const cacheKey = `purchasedCourse:v1:${ctx.auth.user.id}`;
+
+    let enrollments = await redis.get<Enrollment[]>(cacheKey);
+
+    if (enrollments !== null && enrollments.length !== 0) {
+      console.log("Redis", enrollments);
+      const courses = enrollments.map((e) => e.course);
+      return courses;
+    }
+
+    enrollments = await prisma.enrollMent.findMany({
       where: {
         userId: ctx.auth.user.id,
       },
-      include: {
-        course: true,
-      },
+      include: enrollmentSelect,
     });
+
+    await redis.set(cacheKey, enrollments, { ex: 10000 });
+
     const courses = enrollments.map((e) => e.course);
+    console.log("Khoa hoc da mua", enrollments);
     return courses;
   }),
 

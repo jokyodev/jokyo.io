@@ -1,18 +1,9 @@
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import z from "zod";
 import prisma from "@/lib/db";
-import { CACHE_KEYS } from "@/lib/cache-keys";
-import { redis } from "@/lib/redis";
 
-import type { Prisma } from "@/generated/prisma/client";
-
-const courseDetailSelect = {
-  id: true,
-};
-
-type Course = Prisma.CourseGetPayload<{
-  select: typeof courseDetailSelect;
-}>;
+import type { Lesson } from "@/generated/prisma/client";
+import { getOrSetCache } from "@/lib/cache";
 
 export const learnRouter = createTRPCRouter({
   checkEnrollement: protectedProcedure
@@ -22,27 +13,23 @@ export const learnRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const cacheKey = CACHE_KEYS.course.structure(input.slug);
-
-      let course = await redis.get<Course>(cacheKey);
-
-      if (!course) {
-        course = await prisma.course.findUnique({
-          where: {
-            slug: input.slug,
-          },
-          select: courseDetailSelect,
-        });
-      }
-      if (!course) {
-        return null;
-      }
-      await redis.set(cacheKey, course, { ex: 86400 });
-
-      const enrollment = await prisma.enrollMent.findFirst({
+      const course = await prisma.course.findUnique({
         where: {
-          userId: ctx.auth.user.id,
-          courseId: course.id,
+          slug: input.slug,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!course) return null;
+
+      const enrollment = await prisma.enrollMent.findUnique({
+        where: {
+          userId_courseId: {
+            userId: ctx.auth.user.id,
+            courseId: course.id,
+          },
         },
       });
       if (!enrollment) {
@@ -111,5 +98,83 @@ export const learnRouter = createTRPCRouter({
         chapterSlug: firstLesson.chapter.slug,
         startPosition: 0,
       };
+    }),
+
+  checkAccessPermission: protectedProcedure
+    .input(
+      z.object({
+        courseSlug: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const course = await prisma.course.findUnique({
+        where: {
+          slug: input.courseSlug,
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+      if (!course) return null;
+
+      const enrollment = await prisma.enrollMent.findUnique({
+        where: {
+          userId_courseId: {
+            userId: ctx.auth.user.id,
+            courseId: course.id,
+          },
+        },
+      });
+      if (!enrollment) return null;
+
+      return course;
+    }),
+
+  getLesson: protectedProcedure
+    .input(
+      z.object({
+        lessonId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const cacheKey = `lesson:${input.lessonId}`;
+
+      return getOrSetCache<Lesson | null>(cacheKey, 60 * 60 * 12, async () => {
+        return prisma.lesson.findUnique({
+          where: { id: input.lessonId },
+        });
+      });
+    }),
+
+  getChaptersAndLessons: protectedProcedure
+    .input(
+      z.object({
+        courseSlug: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const cacheKey = `course:structure:v1:${input.courseSlug}`;
+      return getOrSetCache(cacheKey, 12 * 60 * 60, async () => {
+        return await prisma.course.findUnique({
+          where: {
+            slug: input.courseSlug,
+          },
+          select: {
+            chapters: {
+              orderBy: {
+                position: "asc",
+              },
+              include: {
+                lessons: {
+                  orderBy: {
+                    position: "asc",
+                  },
+                },
+              },
+            },
+          },
+        });
+      });
     }),
 });

@@ -9,6 +9,7 @@ import {
 } from "@/lib/zod-schemas/course-schema";
 import { lessonSchema } from "@/lib/zod-schemas/lesson-schema";
 import slugify from "slugify";
+import { redis } from "@/lib/redis";
 export const categoryRouter = createTRPCRouter({
   getAll: adminProcedure.query(async () => {
     return prisma.category.findMany();
@@ -58,8 +59,10 @@ export const courseRouter = createTRPCRouter({
         thumbnailKey: z.string(),
       }),
     )
-    .mutation(({ ctx, input }) => {
-      return prisma.course.create({
+    .mutation(async ({ ctx, input }) => {
+      const cacheKey = "allcourses:v1";
+
+      const course = await prisma.course.create({
         data: {
           categoryId: input.categoryId,
           description: input.description,
@@ -75,6 +78,8 @@ export const courseRouter = createTRPCRouter({
           userId: ctx.auth.user.id,
         },
       });
+      await redis.del(cacheKey);
+      return course;
     }),
 
   getAll: adminProcedure.query(async () => {
@@ -103,12 +108,16 @@ export const courseRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return prisma.course.delete({
+      const cacheKey = "allcourses:v1";
+
+      const course = await prisma.course.delete({
         where: {
           id: input.courseId,
           userId: ctx.auth.user.id,
         },
       });
+      redis.del(cacheKey);
+      return course;
     }),
 
   getOne: adminProcedure
