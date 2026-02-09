@@ -30,8 +30,12 @@ export default function CourseVideo({
 
   const trpc = useTRPC();
 
-  const createOrUpdateProgress = useMutation(
-    trpc.progressRouter.createOrUpdate.mutationOptions({}),
+  const progress = useMutation(
+    trpc.progressRouter.createOrUpdate.mutationOptions({
+      onSuccess: (data) => {
+        console.log(data);
+      },
+    }),
   );
 
   useEffect(() => {
@@ -53,6 +57,7 @@ export default function CourseVideo({
 
       const onTimeUpdate = (data: { seconds: number; duration: number }) => {
         const currentTime = Math.floor(data.seconds);
+
         const duration = Math.trunc(data.duration);
 
         // nếu duration lỗi thì skip
@@ -66,7 +71,7 @@ export default function CourseVideo({
         if (isSending.current) return;
         isSending.current = true;
 
-        createOrUpdateProgress.mutate(
+        progress.mutate(
           {
             lessonId,
             lastPosition: currentTime,
