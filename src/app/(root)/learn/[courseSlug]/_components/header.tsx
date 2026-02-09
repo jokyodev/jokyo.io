@@ -24,7 +24,7 @@ const Header = () => {
 
           {/* Course Title */}
           <div className="min-w-0">
-            <p className="text-sm lg:text-base font-semibold uppercase truncate max-w-[180px] sm:max-w-[260px] lg:max-w-[420px]">
+            <p className="text-sm lg:text-base font-semibold uppercase truncate max-w-45 sm:max-w-65 lg:max-w-105">
               Xây dựng ứng dụng figma clone with nextjs
             </p>
           </div>

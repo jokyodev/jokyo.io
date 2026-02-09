@@ -178,3 +178,13 @@ export const learnRouter = createTRPCRouter({
       });
     }),
 });
+
+export const progressRouter = createTRPCRouter({
+  createOrUpdate: protectedProcedure
+    .input(
+      z.object({
+        lessonId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {}),
+});
