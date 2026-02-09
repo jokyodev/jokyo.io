@@ -40,7 +40,9 @@ model UserProgress {
 
   isCompleted  Boolean  @default(false)
   lastPosition Int      @default(0)
+  maxPosition  Int      @default(0)
   createdAt    DateTime @default(now())
+  duration     Int      @default(0)
   updatedAt    DateTime @updatedAt
 
   @@unique([userId, lessonId])

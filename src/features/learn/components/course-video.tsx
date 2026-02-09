@@ -4,7 +4,7 @@ import { useTRPC } from "@/trpc/client";
 import { getVideoUrl } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface CourseVideoProps {
   videoKey: string;
@@ -12,11 +12,21 @@ interface CourseVideoProps {
   lessonId: string;
 }
 
-const CourseVideo = ({ videoKey, lessonName, lessonId }: CourseVideoProps) => {
+const TRACK_EVERY_SECONDS = 3;
+
+export default function CourseVideo({
+  videoKey,
+  lessonName,
+  lessonId,
+}: CourseVideoProps) {
   const [isLoading, setIsLoading] = useState(true);
+
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const playerRef = useRef<any>(null);
-  const lastTrackedTime = useRef(0);
+
+  // mốc lần cuối gửi API (để throttle)
+  const lastSentPosition = useRef(0);
+  const isSending = useRef(false);
 
   const trpc = useTRPC();
 
@@ -26,55 +36,72 @@ const CourseVideo = ({ videoKey, lessonName, lessonId }: CourseVideoProps) => {
 
   useEffect(() => {
     setIsLoading(true);
-    lastTrackedTime.current = 0;
+    lastSentPosition.current = 0;
   }, [videoKey]);
 
   useEffect(() => {
-    let isMounted = true;
+    let destroyed = false;
 
     const initPlayer = async () => {
       if (!iframeRef.current) return;
 
-      // ✅ Import player.js chỉ ở client
       const playerjs = (await import("player.js")).default;
+      if (destroyed) return;
 
-      if (!isMounted) return;
-
-      const player = new playerjs.Player(iframeRef.current);
+      const player: any = new playerjs.Player(iframeRef.current);
       playerRef.current = player;
 
-      player.on("ready", () => {
-        console.log("Bunny Player Ready");
+      const onTimeUpdate = (data: { seconds: number; duration: number }) => {
+        const currentTime = Math.floor(data.seconds);
+        const duration = Math.trunc(data.duration);
 
-        player.on(
-          "timeupdate",
-          (data: { seconds: number; duration: number }) => {
-            const currentTime = Math.floor(data.seconds);
+        // nếu duration lỗi thì skip
+        if (!duration || duration <= 0) return;
 
-            if (currentTime - lastTrackedTime.current >= 15) {
-              console.log(
-                `Đã xem thêm 15 giây. Tổng: ${currentTime}s / ${data.duration}s`,
-              );
-              createOrUpdateProgress.mutateAsync({
-                lessonId: lessonId,
-                lastPosition: currentTime,
-              });
-              lastTrackedTime.current = currentTime;
-            }
+        // nếu user tua lùi, vẫn update lastPosition
+        // nhưng throttle bằng TRACK_EVERY_SECONDS để khỏi spam
+        const diff = Math.abs(currentTime - lastSentPosition.current);
+        if (diff < TRACK_EVERY_SECONDS) return;
+
+        if (isSending.current) return;
+        isSending.current = true;
+
+        createOrUpdateProgress.mutate(
+          {
+            lessonId,
+            lastPosition: currentTime,
+            duration,
+          },
+          {
+            onSettled: () => {
+              isSending.current = false;
+            },
           },
         );
+
+        lastSentPosition.current = currentTime;
+      };
+
+      player.on("ready", () => {
+        player.on("timeupdate", onTimeUpdate as any);
       });
+
+      return () => {
+        player.off("timeupdate", onTimeUpdate as any);
+      };
     };
 
-    initPlayer();
+    let cleanupFn: any;
+
+    initPlayer().then((cleanup) => {
+      cleanupFn = cleanup;
+    });
 
     return () => {
-      isMounted = false;
-      if (playerRef.current) {
-        playerRef.current.off("timeupdate");
-      }
+      destroyed = true;
+      cleanupFn?.();
     };
-  }, [videoKey]);
+  }, [videoKey, lessonId]);
 
   return (
     <div className="w-full overflow-hidden mt-2">
@@ -101,6 +128,4 @@ const CourseVideo = ({ videoKey, lessonName, lessonId }: CourseVideoProps) => {
       </div>
     </div>
   );
-};
-
-export default CourseVideo;
+}

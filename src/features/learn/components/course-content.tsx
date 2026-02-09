@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -28,7 +28,7 @@ export default function CourseContent({
   const lessonId = params.lessonId;
 
   // ✅ chapter hiện tại đang chứa lessonId
-  const currentChapterId = React.useMemo(() => {
+  const currentChapterId = useMemo(() => {
     if (!lessonId) return "";
 
     const chapter = chaptersAndLessons?.chapters.find((ch) =>
@@ -39,10 +39,10 @@ export default function CourseContent({
   }, [chaptersAndLessons, lessonId]);
 
   // ✅ MULTIPLE => value phải là string[]
-  const [openChapters, setOpenChapters] = React.useState<string[]>([]);
+  const [openChapters, setOpenChapters] = useState<string[]>([]);
 
   // ✅ mỗi lần đổi lesson => đảm bảo chapter chứa lesson đó đang mở
-  React.useEffect(() => {
+  useEffect(() => {
     if (!currentChapterId) return;
 
     setOpenChapters((prev) => {

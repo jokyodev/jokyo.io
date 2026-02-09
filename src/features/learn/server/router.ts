@@ -185,25 +185,83 @@ export const progressRouter = createTRPCRouter({
       z.object({
         lessonId: z.string(),
         lastPosition: z.number(),
+        duration: z.number(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      console.log(input);
+      const userId = ctx.auth.user.id;
+
+      const progress = await prisma.userProgress.findUnique({
+        where: {
+          userId_lessonId: {
+            userId,
+            lessonId: input.lessonId,
+          },
+        },
+        select: {
+          id: true,
+          maxPosition: true,
+          isCompleted: true,
+        },
+      });
+
+      // ✅ completed rồi thì vẫn update lastPosition để resume đúng
+      if (progress?.isCompleted) {
+        return prisma.userProgress.update({
+          where: {
+            userId_lessonId: {
+              userId,
+              lessonId: input.lessonId,
+            },
+          },
+          data: {
+            lastPosition: input.lastPosition,
+          },
+        });
+      }
+
+      const SEEK_THRESHOLD = 10; // giây
+      const STEP_CAP = 6; // mỗi request chỉ cho maxPosition tăng tối đa 6s
+
+      const oldMax = progress?.maxPosition ?? 0;
+
+      let newMax = oldMax;
+
+      if (input.lastPosition <= oldMax + SEEK_THRESHOLD) {
+        // xem bình thường, tăng theo currentTime
+        newMax = Math.max(oldMax, input.lastPosition);
+      } else {
+        // user vừa tua xa
+        // KHÔNG nhảy maxPosition lên ngay
+        // nhưng vẫn cho "đuổi theo" từ từ nếu họ xem thật
+        newMax = oldMax + STEP_CAP;
+      }
+
+      // clamp
+      newMax = Math.min(newMax, input.duration);
+
+      const isCompleted = newMax >= input.duration * 0.8;
 
       return prisma.userProgress.upsert({
         where: {
           userId_lessonId: {
-            userId: ctx.auth.user.id,
+            userId,
             lessonId: input.lessonId,
           },
         },
         update: {
           lastPosition: input.lastPosition,
+          duration: input.duration,
+          maxPosition: isCompleted ? input.duration : newMax,
+          isCompleted,
         },
         create: {
-          userId: ctx.auth.user.id,
+          userId,
           lessonId: input.lessonId,
           lastPosition: input.lastPosition,
+          duration: input.duration,
+          maxPosition: input.lastPosition,
+          isCompleted,
         },
       });
     }),
