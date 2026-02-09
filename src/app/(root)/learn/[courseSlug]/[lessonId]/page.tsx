@@ -1,4 +1,5 @@
 import CourseVideo from "@/features/learn/components/course-video";
+import LearnActions from "@/features/learn/components/learn-actions";
 import { caller } from "@/trpc/server";
 import { redirect } from "next/navigation";
 
@@ -19,7 +20,12 @@ const Page = async ({ params }: iAppProps) => {
 
   return (
     <div>
-      <CourseVideo lessonName={lesson.name} videoKey={lesson.videoKey!} />
+      <CourseVideo
+        lessonId={lesson.id}
+        lessonName={lesson.name}
+        videoKey={lesson.videoKey!}
+      />
+      <LearnActions />
     </div>
   );
 };

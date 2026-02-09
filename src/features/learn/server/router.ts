@@ -184,7 +184,27 @@ export const progressRouter = createTRPCRouter({
     .input(
       z.object({
         lessonId: z.string(),
+        lastPosition: z.number(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {}),
+    .mutation(async ({ ctx, input }) => {
+      console.log(input);
+
+      return prisma.userProgress.upsert({
+        where: {
+          userId_lessonId: {
+            userId: ctx.auth.user.id,
+            lessonId: input.lessonId,
+          },
+        },
+        update: {
+          lastPosition: input.lastPosition,
+        },
+        create: {
+          userId: ctx.auth.user.id,
+          lessonId: input.lessonId,
+          lastPosition: input.lastPosition,
+        },
+      });
+    }),
 });

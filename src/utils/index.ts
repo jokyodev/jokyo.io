@@ -4,7 +4,7 @@ export const getImageUrl = (imageId: string) => {
 };
 
 export const getVideoUrl = (videoId: string) => {
-  const url = `https://iframe.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID}/${videoId}?autoplay=true&loop=false&muted=false&preload=true&responsive=true`;
+  const url = `https://player.mediadelivery.net/embed/${process.env.NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID}/${videoId}?autoplay=true&loop=false&muted=false&preload=true&responsive=true`;
 
   return url;
 };

@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import CourseContent from "@/features/learn/components/course-content"; // Đây là file chứa Sidebar của ông
 
 import { RouterOutputs } from "@/trpc/init";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BookOpen, FolderOpen } from "lucide-react";
 
 type Params = Promise<{
   courseSlug: string;
@@ -44,7 +46,7 @@ const Layout = async ({ children, params }: iAppProps) => {
       {/* 1. Header luôn nằm trên cùng, cố định chiều cao (ví dụ h-16 = 64px) */}
       <Header />
       <div className="flex-1 flex flex-col lg:flex-row ">
-        <div className="lg:flex-7 ">{children}</div>
+        <div className="lg:flex-7 px-3 ">{children}</div>
         <CourseContent
           courseSlug={courseSlug}
           chaptersAndLessons={safeChaptersAndLessons}
