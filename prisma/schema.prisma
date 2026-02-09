@@ -25,6 +25,7 @@ model User {
   courses        Course[]
   enrollMents    EnrollMent[]
   userProgresses UserProgress[]
+  notes          Note[]
 
   @@unique([email])
   @@map("user")
@@ -48,6 +49,7 @@ model UserProgress {
   @@unique([userId, lessonId])
   @@index([userId])
   @@index([lessonId])
+  @@index([userId, updatedAt])
 }
 
 model Session {
@@ -127,12 +129,12 @@ model Course {
   categoryId   String
   level        CourseLevels @default(ALL_LEVELS)
   status       CourseStatus @default(PRIVATE)
-  price        String
+  price        Int          @default(0)
 
   category Category @relation(fields: [categoryId], references: [id])
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   chapters    Chapter[]
   createdAt   DateTime     @default(now())
@@ -142,8 +144,8 @@ model Course {
 
 model Chapter {
   id           String   @id @default(uuid())
-  name         String   @unique
-  slug         String   @unique
+  name         String
+  slug         String
   courseId     String
   course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons      Lesson[]
@@ -152,6 +154,9 @@ model Chapter {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([courseId, slug])
+  @@unique([courseId, position])
 }
 
 model Lesson {
@@ -168,6 +173,7 @@ model Lesson {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   userProgresses UserProgress[]
+  notes          Note[]
 
   @@unique([chapterId, position])
 }
@@ -213,6 +219,23 @@ model SiteConfiguration {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   updatedBy    String? // ID của Admin thực hiện thay đổi
+}
+
+model Note {
+  id String @id @default(uuid())
+
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId  String
+  lesson    Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  content   String
+  timestamp Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, lessonId])
+  @@index([lessonId, timestamp])
 }
 
 enum EnrollmentStatus {

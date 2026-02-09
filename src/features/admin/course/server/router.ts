@@ -69,7 +69,7 @@ export const courseRouter = createTRPCRouter({
           level: input.level,
           name: input.name,
 
-          price: input.price,
+          price: Number(input.price),
           slug: input.slug,
           status: input.status,
 
@@ -162,7 +162,10 @@ export const courseRouter = createTRPCRouter({
           id: input.courseId,
           userId: ctx.auth.user.id,
         },
-        data: input.data,
+        data: {
+          ...input.data,
+          price: Number(input.data.price),
+        },
       });
     }),
 });
