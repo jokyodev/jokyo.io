@@ -5,8 +5,10 @@ import Notes from "@/features/notes/components/notes";
 import { StickyNote, FolderArchive, Code2 } from "lucide-react";
 
 type TabKey = "notes" | "resources" | "source";
-
-const LearnActions = () => {
+interface iAppProps {
+  lessonId: string;
+}
+const LearnActions = ({ lessonId }: iAppProps) => {
   const [tab, setTab] = useState<TabKey>("notes");
 
   return (
@@ -34,10 +36,10 @@ const LearnActions = () => {
       </div>
 
       {/* Tab content */}
-      <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+      <div className="mt-4 rounded-sm border border-zinc-200 bg-white p-4 shadow-sm">
         {tab === "notes" && (
           <div>
-            <Notes />
+            <Notes lessonId={lessonId} />
           </div>
         )}
 

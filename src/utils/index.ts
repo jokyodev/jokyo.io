@@ -53,3 +53,19 @@ export const formatPrice = (price: number | null | undefined) => {
     .format(price)
     .replace("₫", ""); // Lấy số, bỏ ₫ để ta tự format UI cho đẹp
 };
+export const formatTime = (seconds: number): string => {
+  if (isNaN(seconds)) return "00:00";
+
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+
+  // Format số có 2 chữ số (vd: 5 -> 05)
+  const pad = (num: number) => num.toString().padStart(2, "0");
+
+  if (hrs > 0) {
+    return `${hrs}:${pad(mins)}:${pad(secs)}`;
+  }
+
+  return `${pad(mins)}:${pad(secs)}`;
+};

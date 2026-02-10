@@ -1,37 +1,105 @@
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { StickyNote } from "lucide-react";
+"use client";
 
-const Notes = () => {
+import { useState } from "react";
+import { Loader2, Plus } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import { useVideoPlayer } from "@/context/video-player-provider";
+import { useTRPC } from "@/trpc/client";
+import { formatTime } from "@/utils";
+import { NoteForm } from "./note-form";
+import { NoteItem } from "./note-item";
+
+const MAX_LENGTH = 200;
+const MAX_NOTE = 1;
+
+const Notes = ({ lessonId }: { lessonId: string }) => {
+  const trpc = useTRPC();
+  const { currentTime, seek, pause } = useVideoPlayer();
+  const [isAdding, setIsAdding] = useState(false);
+  const [newContent, setNewContent] = useState("");
+
+  const {
+    data: notes,
+    isLoading,
+    refetch,
+  } = useQuery(trpc.noteRouter.getMany.queryOptions({ lessonId }));
+
+  const addNoteMutation = useMutation(
+    trpc.noteRouter.create.mutationOptions({
+      onSuccess: () => {
+        setIsAdding(false);
+        setNewContent("");
+        refetch();
+        toast.success("Thêm thành công");
+      },
+    }),
+  );
+
+  const updateNoteMutation = useMutation(
+    trpc.noteRouter.update.mutationOptions({
+      onSuccess: () => refetch(),
+    }),
+  );
+
+  const handleUpdate = (id: string, content: string) => {
+    updateNoteMutation.mutate({ noteId: id, content });
+  };
+
+  if (isLoading) return <Loader2 className="w-4 h-4 animate-spin" />;
+
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          className="flex items-center gap-2 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl px-5 transition-all"
-        >
-          <StickyNote size={18} className="text-orange-500" />
-          <span className="font-medium">Ghis chú</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Ghi chú</DialogTitle>
-          <DialogDescription>
-            Ghi chú cho bài học - cài đặt vps
-            Test code xemok chua
-          </DialogDescription>
-          <Button>Hi therer</Button>
-        </DialogHeader>
-      </DialogContent>
-    </Dialog>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium">Ghi chú bài học</h3>
+        {!isAdding && (notes?.length ?? 0) < MAX_NOTE && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setIsAdding(true);
+              pause();
+            }}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      {isAdding && (
+        <NoteForm
+          content={newContent}
+          setContent={setNewContent}
+          onSave={() =>
+            addNoteMutation.mutate({
+              lessonId,
+              content: newContent,
+              timestamp: Math.floor(currentTime),
+            })
+          }
+          onCancel={() => setIsAdding(false)}
+          isPending={addNoteMutation.isPending}
+          maxLength={MAX_LENGTH}
+          placeholder={`Ghi chú tại ${formatTime(currentTime)}...`}
+        />
+      )}
+
+      <div className="space-y-3">
+        {notes?.map((note) => (
+          <NoteItem
+            key={note.id}
+            note={note}
+            maxLength={MAX_LENGTH}
+            onUpdate={handleUpdate}
+            onSeek={seek}
+            isUpdating={updateNoteMutation.isPending}
+            refetch={refetch}
+          />
+        ))}
+      </div>
+    </div>
   );
 };
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useVideoPlayer } from "@/context/video-player-provider";
 import { useTRPC } from "@/trpc/client";
 import { getVideoUrl } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
@@ -22,7 +23,8 @@ export default function CourseVideo({
   const [isLoading, setIsLoading] = useState(true);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const playerRef = useRef<any>(null);
+
+  const { playerRef, setCurrentTime } = useVideoPlayer();
 
   // mốc lần cuối gửi API (để throttle)
   const lastSentPosition = useRef(0);
@@ -32,9 +34,7 @@ export default function CourseVideo({
 
   const progress = useMutation(
     trpc.progressRouter.createOrUpdate.mutationOptions({
-      onSuccess: (data) => {
-        console.log(data);
-      },
+      onSuccess: (data) => {},
     }),
   );
 
@@ -57,7 +57,7 @@ export default function CourseVideo({
 
       const onTimeUpdate = (data: { seconds: number; duration: number }) => {
         const currentTime = Math.floor(data.seconds);
-
+        setCurrentTime(currentTime);
         const duration = Math.trunc(data.duration);
 
         // nếu duration lỗi thì skip

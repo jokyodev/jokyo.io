@@ -61,7 +61,7 @@ export default function CourseContent({
     ) ?? 0;
 
   return (
-    <div className="flex-2 p-2 space-y-3">
+    <div className="flex-2 p-3 space-y-3">
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-2">Nội dung khóa học</h2>
         <p className="text-sm text-muted-foreground">
