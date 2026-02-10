@@ -26,7 +26,9 @@ const Notes = () => {
           <DialogTitle>Ghi chú</DialogTitle>
           <DialogDescription>
             Ghi chú cho bài học - cài đặt vps
+            Test code xemok chua
           </DialogDescription>
+          <Button>Hi therer</Button>
         </DialogHeader>
       </DialogContent>
     </Dialog>
