@@ -3,9 +3,9 @@
 import { useVideoPlayer } from "@/context/video-player-provider";
 import { useTRPC } from "@/trpc/client";
 import { getVideoUrl } from "@/utils";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 interface CourseVideoProps {
   videoKey: string;
@@ -13,7 +13,9 @@ interface CourseVideoProps {
   lessonId: string;
 }
 
-const TRACK_EVERY_SECONDS = 3;
+const TRACK_EVERY_SECONDS = 10;
+const INIT_RETRY_INTERVAL = 250; // ms
+const INIT_MAX_RETRY = 20; // 20 * 250 = 5s
 
 export default function CourseVideo({
   videoKey,
@@ -21,92 +23,164 @@ export default function CourseVideo({
   lessonId,
 }: CourseVideoProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const [isPlayerReady, setIsPlayerReady] = useState(false);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
-
   const { playerRef, setCurrentTime } = useVideoPlayer();
 
-  // mốc lần cuối gửi API (để throttle)
   const lastSentPosition = useRef(0);
   const isSending = useRef(false);
+  const hasRestoredPosition = useRef(false);
 
   const trpc = useTRPC();
 
-  const progress = useMutation(
-    trpc.progressRouter.createOrUpdate.mutationOptions({
-      onSuccess: (data) => {},
-    }),
+  const { data: lastPositionData } = useQuery(
+    trpc.progressRouter.getLastPosition.queryOptions({ lessonId }),
   );
 
+  const progressMutation = useMutation(
+    trpc.progressRouter.createOrUpdate.mutationOptions(),
+  );
+
+  // Reset flags khi đổi bài
   useEffect(() => {
     setIsLoading(true);
-    lastSentPosition.current = 0;
-  }, [videoKey]);
+    setIsPlayerReady(false);
 
+    hasRestoredPosition.current = false;
+    lastSentPosition.current = 0;
+    isSending.current = false;
+  }, [lessonId, videoKey]);
+
+  // Seek sau khi player ready
+  useEffect(() => {
+    if (
+      !isPlayerReady ||
+      !playerRef.current ||
+      lastPositionData?.lastPosition === undefined ||
+      hasRestoredPosition.current
+    )
+      return;
+
+    const savedPos = lastPositionData.lastPosition;
+
+    if (savedPos > 2) {
+      try {
+        playerRef.current.setCurrentTime(savedPos);
+        setCurrentTime(savedPos);
+      } catch {}
+    }
+
+    hasRestoredPosition.current = true;
+  }, [isPlayerReady, lastPositionData, setCurrentTime, playerRef]);
+
+  // Init playerjs: retry + cleanup đúng
   useEffect(() => {
     let destroyed = false;
+    let playerInstance: any = null;
 
-    const initPlayer = async () => {
-      if (!iframeRef.current) return;
+    let retryCount = 0;
+    let retryTimer: any = null;
 
-      const playerjs = (await import("player.js")).default;
-      if (destroyed) return;
+    const cleanup = () => {
+      if (retryTimer) clearTimeout(retryTimer);
+      retryTimer = null;
 
-      const player: any = new playerjs.Player(iframeRef.current);
-      playerRef.current = player;
+      setIsPlayerReady(false);
 
-      const onTimeUpdate = (data: { seconds: number; duration: number }) => {
-        const currentTime = Math.floor(data.seconds);
-        setCurrentTime(currentTime);
-        const duration = Math.trunc(data.duration);
+      if (playerInstance) {
+        try {
+          playerInstance.off("timeupdate");
+          playerInstance.off("ready");
+        } catch {}
+      }
 
-        // nếu duration lỗi thì skip
-        if (!duration || duration <= 0) return;
-
-        // nếu user tua lùi, vẫn update lastPosition
-        // nhưng throttle bằng TRACK_EVERY_SECONDS để khỏi spam
-        const diff = Math.abs(currentTime - lastSentPosition.current);
-        if (diff < TRACK_EVERY_SECONDS) return;
-
-        if (isSending.current) return;
-        isSending.current = true;
-
-        progress.mutate(
-          {
-            lessonId,
-            lastPosition: currentTime,
-            duration,
-          },
-          {
-            onSettled: () => {
-              isSending.current = false;
-            },
-          },
-        );
-
-        lastSentPosition.current = currentTime;
-      };
-
-      player.on("ready", () => {
-        player.on("timeupdate", onTimeUpdate as any);
-      });
-
-      return () => {
-        player.off("timeupdate", onTimeUpdate as any);
-      };
+      playerInstance = null;
+      playerRef.current = null;
     };
 
-    let cleanupFn: any;
+    const attachTimeUpdate = (instance: any) => {
+      const onTimeUpdate = (data: { seconds: number; duration: number }) => {
+        const currentTime = Math.floor(data.seconds);
+        const duration = Math.trunc(data.duration);
 
-    initPlayer().then((cleanup) => {
-      cleanupFn = cleanup;
-    });
+        setCurrentTime(currentTime);
+
+        if (!duration || duration <= 0) return;
+
+        const diff = Math.abs(currentTime - lastSentPosition.current);
+
+        if (diff >= TRACK_EVERY_SECONDS && !isSending.current) {
+          isSending.current = true;
+
+          progressMutation.mutate(
+            { lessonId, lastPosition: currentTime, duration },
+            {
+              onSettled: () => {
+                isSending.current = false;
+              },
+            },
+          );
+
+          lastSentPosition.current = currentTime;
+        }
+      };
+
+      instance.on("timeupdate", onTimeUpdate);
+    };
+
+    const tryInit = async () => {
+      if (destroyed) return;
+      if (!iframeRef.current) return;
+
+      // iframe phải load xong trước đã
+      if (isLoading) {
+        retryTimer = setTimeout(tryInit, INIT_RETRY_INTERVAL);
+        return;
+      }
+
+      try {
+        const playerjs = (await import("player.js")).default;
+        if (destroyed) return;
+
+        playerInstance = new playerjs.Player(iframeRef.current);
+        playerRef.current = playerInstance;
+
+        // Nếu ready không bắn => retry
+        let readyTimeout = setTimeout(() => {
+          if (destroyed) return;
+          cleanup();
+
+          retryCount++;
+          if (retryCount <= INIT_MAX_RETRY) {
+            retryTimer = setTimeout(tryInit, INIT_RETRY_INTERVAL);
+          }
+        }, 1200);
+
+        playerInstance.on("ready", () => {
+          clearTimeout(readyTimeout);
+          if (destroyed) return;
+
+          setIsPlayerReady(true);
+          attachTimeUpdate(playerInstance);
+        });
+      } catch {
+        cleanup();
+        retryCount++;
+
+        if (retryCount <= INIT_MAX_RETRY) {
+          retryTimer = setTimeout(tryInit, INIT_RETRY_INTERVAL);
+        }
+      }
+    };
+
+    tryInit();
 
     return () => {
       destroyed = true;
-      cleanupFn?.();
+      cleanup();
     };
-  }, [videoKey, lessonId]);
+  }, [lessonId, videoKey, isLoading]); // 👈 rất quan trọng
 
   return (
     <div className="w-full overflow-hidden mt-2">
@@ -114,7 +188,7 @@ export default function CourseVideo({
         {isLoading && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-background/80 backdrop-blur-sm">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-sm font-medium text-muted-foreground italic">
               Đang tải bài giảng...
             </p>
           </div>
@@ -124,11 +198,10 @@ export default function CourseVideo({
           ref={iframeRef}
           title={lessonName}
           src={getVideoUrl(videoKey)}
-          loading="lazy"
           onLoad={() => setIsLoading(false)}
           allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
           allowFullScreen
-          className="absolute inset-0 h-full w-full"
+          className="absolute inset-0 h-full w-full border-none"
         />
       </div>
     </div>

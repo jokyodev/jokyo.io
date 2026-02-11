@@ -265,6 +265,29 @@ export const progressRouter = createTRPCRouter({
         },
       });
     }),
+
+  getLastPosition: protectedProcedure
+    .input(
+      z.object({
+        lessonId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      console.log(input);
+      const lastPosition = await prisma.userProgress.findUnique({
+        where: {
+          userId_lessonId: {
+            userId: ctx.auth.user.id,
+            lessonId: input.lessonId,
+          },
+        },
+        select: {
+          lastPosition: true,
+        },
+      });
+      console.log("Last position ", lastPosition);
+      return lastPosition;
+    }),
 });
 
 export const resourceRouter = createTRPCRouter({
@@ -275,13 +298,19 @@ export const resourceRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      return prisma.course.findUnique({
-        where: {
-          slug: input.courseSlug,
-        },
-        select: {
-          resourcesLinks: true,
-        },
+      const cacheKey = `resource:v1:${input.courseSlug}`;
+
+      return getOrSetCache(cacheKey, 24 * 60 * 60, async () => {
+        const data = await prisma.course.findUnique({
+          where: {
+            slug: input.courseSlug,
+          },
+          select: {
+            resourcesLinks: true,
+          },
+        });
+        if (!data?.resourcesLinks) return null;
+        return data?.resourcesLinks;
       });
     }),
 });

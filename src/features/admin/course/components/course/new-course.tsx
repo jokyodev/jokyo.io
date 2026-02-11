@@ -90,6 +90,8 @@ const NewCourse = () => {
       level: "BEGINNER",
       status: "PRIVATE",
       price: "99999",
+      resourcesLinks: "",
+      finalSourceCode: "",
     },
   });
 
@@ -309,6 +311,43 @@ const NewCourse = () => {
                   <FormMessage />
                 </FormItem>
               )}
+            />
+            <FormField
+              name="resourcesLinks"
+              control={form.control}
+              render={({ field }) => {
+                return (
+                  <FormItem>
+                    <FormLabel>Tài nguyên </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder={` Dán link tài nguyên vào đây\n Images: https://jokyo.com/images \n snippets:https://githut.com/autosnippets
+                        `}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+            <FormField
+              name="finalSourceCode"
+              control={form.control}
+              render={({ field }) => {
+                return (
+                  <FormItem>
+                    <FormLabel>Link Final Source Code </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={`https://google.com/finalsourcecode`}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
             <Button type="submit" disabled={form.formState.isSubmitting}>
               Tạo khóa học

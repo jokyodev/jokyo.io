@@ -54,9 +54,9 @@ export const courseRouter = createTRPCRouter({
         price: z.string(),
         slug: z.string(),
         status: z.enum(courseStatus),
-
         subTitle: z.string(),
         thumbnailKey: z.string(),
+        finalSourceCode: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -76,6 +76,7 @@ export const courseRouter = createTRPCRouter({
           subTitle: input.subTitle,
           thumbnailKey: input.thumbnailKey,
           userId: ctx.auth.user.id,
+          finalSourceCode: input.finalSourceCode,
         },
       });
       await redis.del(cacheKey);
@@ -157,6 +158,17 @@ export const courseRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       console.log(input.data);
+
+      const oldCourse = await prisma.course.findUnique({
+        where: {
+          id: input.courseId,
+        },
+      });
+      if (!oldCourse) return null;
+
+      const cacheKey = `resource:v1:${oldCourse.slug}`;
+      redis.del(cacheKey);
+
       return prisma.course.update({
         where: {
           id: input.courseId,
@@ -176,7 +188,6 @@ export const chapterRouter = createTRPCRouter({
       z.object({
         name: z.string(),
         courseId: z.string(),
-        externalLink: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -202,7 +213,6 @@ export const chapterRouter = createTRPCRouter({
           data: {
             name: input.name,
             courseId: input.courseId,
-            externalLink: input?.externalLink,
             position: newPosition,
             slug: slugify(input.name, {
               lower: true,
