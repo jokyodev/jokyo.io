@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Notes from "@/features/notes/components/notes";
 import { StickyNote, FolderArchive, Code2 } from "lucide-react";
+import ResourcesLinks from "./resources-links";
 
 type TabKey = "notes" | "resources" | "source";
 interface iAppProps {
@@ -43,12 +44,7 @@ const LearnActions = ({ lessonId }: iAppProps) => {
           </div>
         )}
 
-        {tab === "resources" && (
-          <div className="text-sm text-zinc-600">
-            {/* TODO: resources component */}
-            Chưa có tài nguyên cho bài học này.
-          </div>
-        )}
+        {tab === "resources" && <ResourcesLinks />}
 
         {tab === "source" && (
           <div className="text-sm text-zinc-600">
@@ -81,14 +77,12 @@ function TabButton({
         "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all",
         "active:scale-[0.98]",
         active
-          ? "bg-zinc-900 text-white shadow-sm"
+          ? "bg-zinc-100 text-black border "
           : "text-zinc-700 hover:bg-zinc-100",
       ].join(" ")}
       type="button"
     >
-      <span className={active ? "text-emerald-300" : "text-zinc-500"}>
-        {icon}
-      </span>
+      <span className={active ? "text-zinc-600" : "text-zinc-500"}>{icon}</span>
       <span className="whitespace-nowrap">{label}</span>
     </button>
   );
