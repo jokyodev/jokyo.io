@@ -15,6 +15,8 @@ interface NoteItemProps {
   isUpdating: boolean;
   maxLength: number;
   refetch: () => void;
+  isEditing: boolean;
+  setIsEditing: (state: boolean) => void;
 }
 
 export const NoteItem = ({
@@ -24,8 +26,9 @@ export const NoteItem = ({
   isUpdating,
   maxLength,
   refetch,
+  isEditing,
+  setIsEditing,
 }: NoteItemProps) => {
-  const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(note.content);
 
   const { seek, play } = useVideoPlayer();
@@ -77,7 +80,7 @@ export const NoteItem = ({
           <DeleteNote noteId={note.id} refetch={refetch} />
         </div>
       </div>
-      <p className="text-sm text-foreground break-words">{note.content}</p>
+      <p className="text-sm text-foreground wrap-break-word">{note.content}</p>
     </div>
   );
 };

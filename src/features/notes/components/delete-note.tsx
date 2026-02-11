@@ -49,7 +49,6 @@ const DeleteNote = ({ noteId, refetch }: iAppProps) => {
           >
             Xóa
           </Button>
-          <Button className="bg-green-500 hover:bg-green-600">Dừng lại</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

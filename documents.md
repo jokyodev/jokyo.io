@@ -39,3 +39,9 @@ Tổng quan dự án Figma Clone
 http://localhost:3000/learn/xay-dung-ung-dung-figma-clone-fullstack-voi-nexjts-16/c20ce735-4103-41e1-8383-d32147ba04f8
 
 <div style="position:relative;padding-top:56.25%;"><iframe src="https://iframe.mediadelivery.net/embed/589797/15c5a4d7-bda2-49b6-8c84-71f53bafc0cd?autoplay=true&loop=false&muted=false&preload=true&responsive=true" loading="lazy" style="border:0;position:absolute;top:0;height:100%;width:100%;" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowfullscreen="true"></iframe></div>
+
+Hình ảnh sử dụng trong video :
+
+Next.js Documentation: https://nextjs.org/docs
+Tailwind CSS Components: https://tailwindcss.com/docs/installation
+Prisma ORM Reference: https://www.prisma.io/docs/reference

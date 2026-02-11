@@ -20,7 +20,7 @@ const Notes = ({ lessonId }: { lessonId: string }) => {
   const { currentTime, seek, pause } = useVideoPlayer();
   const [isAdding, setIsAdding] = useState(false);
   const [newContent, setNewContent] = useState("");
-
+  const [isEditing, setIsEditing] = useState(false);
   const {
     data: notes,
     isLoading,
@@ -40,7 +40,14 @@ const Notes = ({ lessonId }: { lessonId: string }) => {
 
   const updateNoteMutation = useMutation(
     trpc.noteRouter.update.mutationOptions({
-      onSuccess: () => refetch(),
+      onSuccess: () => {
+        refetch();
+
+        setIsEditing(false);
+      },
+      onError: (error) => {
+        console.log(error);
+      },
     }),
   );
 
@@ -52,19 +59,27 @@ const Notes = ({ lessonId }: { lessonId: string }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">Ghi chú bài học</h3>
-        {!isAdding && (notes?.length ?? 0) < MAX_NOTE && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setIsAdding(true);
-              pause();
-            }}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+      <div>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">Ghi chú bài học</h3>
+
+          {!isAdding && (notes?.length ?? 0) < MAX_NOTE && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setIsAdding(true);
+                pause();
+              }}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        {notes?.length === 0 && (
+          <span className="text-sm text-muted-foreground">
+            Chưa có ghi chú nào
+          </span>
         )}
       </div>
 
@@ -96,6 +111,8 @@ const Notes = ({ lessonId }: { lessonId: string }) => {
             onSeek={seek}
             isUpdating={updateNoteMutation.isPending}
             refetch={refetch}
+            isEditing={isEditing}
+            setIsEditing={setIsEditing}
           />
         ))}
       </div>

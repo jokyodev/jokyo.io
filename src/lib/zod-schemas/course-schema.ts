@@ -35,6 +35,10 @@ export const courseSchema = z.object({
   status: z.enum(courseStatus, { error: "Vui lòng chọn cấp độ khóa học" }),
 
   price: z.string().min(1, { error: "Giá bán không được để trống" }),
+
+  resourcesLinks: z
+    .string()
+    .min(1, { error: "Link tài nguyên không được để trống" }),
 });
 
 export type CourseSchemaType = z.infer<typeof courseSchema>;
