@@ -266,3 +266,22 @@ export const progressRouter = createTRPCRouter({
       });
     }),
 });
+
+export const resourceRouter = createTRPCRouter({
+  getAll: protectedProcedure
+    .input(
+      z.object({
+        courseSlug: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return prisma.course.findUnique({
+        where: {
+          slug: input.courseSlug,
+        },
+        select: {
+          resourcesLinks: true,
+        },
+      });
+    }),
+});

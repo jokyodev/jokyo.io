@@ -58,6 +58,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 import { RouterOutputs } from "@/trpc/init";
+import { Loader2 } from "lucide-react";
 
 type CourseType = RouterOutputs["course"]["getOne"];
 
@@ -102,7 +103,8 @@ const BasicInfo = ({ course }: iAppProps) => {
       categoryId: course?.categoryId,
       level: course?.level,
       status: course?.status,
-      price: course?.price,
+      price: course?.price.toString(),
+      resourcesLinks: course?.resourcesLinks ?? "",
     },
   });
 
@@ -324,8 +326,34 @@ const BasicInfo = ({ course }: iAppProps) => {
                 </FormItem>
               )}
             />
+            <FormField
+              name="resourcesLinks"
+              control={form.control}
+              render={({ field }) => {
+                return (
+                  <FormItem>
+                    <FormLabel>Tài nguyên </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder={` Dán link tài nguyên vào đây\n Images: https://jokyo.com/images \n snippets:https://githut.com/autosnippets
+                        `}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
             <Button type="submit" disabled={form.formState.isSubmitting}>
-              Cập nhật khóa học
+              {form.formState.isSubmitting ? (
+                <div className="flex items-center gap-1">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Đang cập nhật
+                </div>
+              ) : (
+                <>Cập nhật</>
+              )}
             </Button>
           </form>
         </Form>
