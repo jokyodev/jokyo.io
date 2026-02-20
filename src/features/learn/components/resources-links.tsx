@@ -36,27 +36,36 @@ const ResourcesLinks = () => {
   return (
     <div>
       <div>
-        <h3 className="uppercase  font-medium mb-2">Liên kết</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          {links.map((link, index) => {
-            const split = link.split(":");
-            return (
-              <div key={index} className="border py-2 px-2 rounded-sm ">
-                <p className="text-sm text-zinc-600">
-                  {split[0]}
-                  {":"}
-                  <Link
-                    href={`${split[1]}:${split[2]}`}
-                    target="_blank"
-                    className="text-green-500 block"
-                  >
-                    {split[1]}:{split[2].substring(0, 20)}...
-                  </Link>
-                </p>
-              </div>
-            );
-          })}
-        </div>
+        {links.length === 0 && (
+          <span className="text-sm text-muted-foreground">
+            Không có tài nguyên
+          </span>
+        )}
+        {links.length > 0 && (
+          <>
+            <h3 className="uppercase  font-medium mb-2">Liên kết</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-2">
+              {links.map((link, index) => {
+                const split = link.split(":");
+                return (
+                  <div key={index} className="border py-2 px-2 rounded-sm ">
+                    <p className="text-sm text-zinc-600">
+                      {split[0]}
+                      {":"}
+                      <Link
+                        href={`${split[1]}:${split[2]}`}
+                        target="_blank"
+                        className="text-green-500 block"
+                      >
+                        {split[1]}:{split[2].substring(0, 20)}...
+                      </Link>
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

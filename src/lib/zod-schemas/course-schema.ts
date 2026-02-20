@@ -39,6 +39,9 @@ export const courseSchema = z.object({
   resourcesLinks: z
     .string()
     .min(1, { error: "Link tài nguyên không được để trống" }),
+  finalSourceCode: z
+    .string()
+    .min(1, { error: "Link final source code không được để trống" }),
 });
 
 export type CourseSchemaType = z.infer<typeof courseSchema>;

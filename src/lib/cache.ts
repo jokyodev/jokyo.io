@@ -9,15 +9,23 @@ export async function getOrSetCache<T>(
 
   if (cached) {
     try {
-      return JSON.parse(cached) as T;
+      // Redis đôi khi trả về chuỗi "null" nếu trước đó lỡ set null
+      if (cached === "null") {
+        await redis.del(key);
+      } else {
+        return JSON.parse(cached) as T;
+      }
     } catch (err) {
-      // cache bẩn -> xoá
       await redis.del(key);
     }
   }
 
   const fresh = await getter();
-  await redis.set(key, JSON.stringify(fresh), { ex: ttlSeconds });
+
+  // CHỐT CHẶN: Chỉ set cache nếu dữ liệu tồn tại
+  if (fresh !== null && fresh !== undefined) {
+    await redis.set(key, JSON.stringify(fresh), { ex: ttlSeconds });
+  }
 
   return fresh;
 }

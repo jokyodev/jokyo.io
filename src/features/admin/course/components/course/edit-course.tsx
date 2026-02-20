@@ -13,12 +13,19 @@ interface iAppProps {
 
 const EditCourse = ({ courseId }: iAppProps) => {
   const trpc = useTRPC();
-  const { data: course, isLoading } = useQuery(
+  const {
+    data: course,
+    isLoading,
+    error,
+  } = useQuery(
     trpc.course.getOne.queryOptions({
       courseId: courseId,
     }),
   );
   if (isLoading) return <LoadingSpinner />;
+  console.log(error);
+
+  if (!course) return <p>Co loi xay ra</p>;
 
   const safeCourse = JSON.parse(JSON.stringify(course));
 

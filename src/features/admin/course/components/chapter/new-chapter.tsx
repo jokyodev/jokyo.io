@@ -40,7 +40,6 @@ const NewChapter = ({ courseId }: iAppProps) => {
     resolver: zodResolver(chapterSchema),
     defaultValues: {
       name: "",
-      externalLink: "",
     },
   });
   const createChapter = useMutation(
@@ -55,8 +54,9 @@ const NewChapter = ({ courseId }: iAppProps) => {
         });
         setOpen(false);
       },
-      onError: () => {
+      onError: (error) => {
         toast.error("Tạo chapter thất bại , vui lòng thử lại sau");
+        console.log(error);
       },
     }),
   );
@@ -65,7 +65,6 @@ const NewChapter = ({ courseId }: iAppProps) => {
     createChapter.mutate({
       name: values.name,
       courseId: courseId,
-      externalLink: values.externalLink,
     });
   };
 
@@ -100,23 +99,7 @@ const NewChapter = ({ courseId }: iAppProps) => {
                 );
               }}
             />
-            <FormField
-              name="externalLink"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tài liệu đính kèm</FormLabel>
-                  <FormControl>
-                    <Input
-                      className=""
-                      placeholder="https://example.com/link.zip"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
             <Button disabled={createChapter.isPending} className="w-full">
               {createChapter.isPending ? (
                 <div className="flex items-center gap-1">

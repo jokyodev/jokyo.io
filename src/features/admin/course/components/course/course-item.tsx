@@ -99,7 +99,8 @@ const CourseItem = ({ course }: iAppProps) => {
               className={buttonVariants({
                 variant: "outline", // Sử dụng variant của Shadcn để tự động tương thích Dark Mode
                 size: "icon",
-                className: "hover:bg-blue-500 hover:text-white transition-all",
+                className:
+                  "bg-blue-500 hover:bg-blue-600 text-white hover:text-white transition-all",
               })}
             >
               <Pencil className="h-4 w-4" />

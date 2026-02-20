@@ -132,6 +132,7 @@ model Course {
   price        Int          @default(0)
 
   resourcesLinks String?
+  finalSourceCode String 
 
   category Category @relation(fields: [categoryId], references: [id])
 
@@ -142,6 +143,7 @@ model Course {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   enrollMents EnrollMent[]
+
 }
 
 model Chapter {
@@ -151,7 +153,6 @@ model Chapter {
   courseId     String
   course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons      Lesson[]
-  externalLink String?
   position     Int
 
   createdAt DateTime @default(now())

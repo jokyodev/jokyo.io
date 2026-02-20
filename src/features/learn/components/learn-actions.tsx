@@ -74,7 +74,7 @@ function TabButton({
     <button
       onClick={onClick}
       className={[
-        "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all",
+        "flex items-center gap-2 rounded-sm px-4 py-2 text-sm font-medium transition-all",
         "active:scale-[0.98]",
         active
           ? "bg-zinc-100 text-black border "

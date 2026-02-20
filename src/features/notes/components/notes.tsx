@@ -58,10 +58,14 @@ const Notes = ({ lessonId }: { lessonId: string }) => {
   if (isLoading) return <Loader2 className="w-4 h-4 animate-spin" />;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-0">
       <div>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">Ghi chú bài học</h3>
+          {notes?.length === 0 && (
+            <span className="text-sm text-muted-foreground">
+              Chưa có ghi chú nào
+            </span>
+          )}
 
           {!isAdding && (notes?.length ?? 0) < MAX_NOTE && (
             <Button
@@ -76,11 +80,6 @@ const Notes = ({ lessonId }: { lessonId: string }) => {
             </Button>
           )}
         </div>
-        {notes?.length === 0 && (
-          <span className="text-sm text-muted-foreground">
-            Chưa có ghi chú nào
-          </span>
-        )}
       </div>
 
       {isAdding && (
