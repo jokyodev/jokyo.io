@@ -20,15 +20,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import ImageUploader from "@/features/admin/uploader/components/image-uploader";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldTitle,
-} from "@/components/ui/field";
 
 import {
   courseLevels,
@@ -105,10 +96,12 @@ const BasicInfo = ({ course }: iAppProps) => {
       status: course?.status,
       price: course?.price.toString(),
       resourcesLinks: course?.resourcesLinks ?? "",
+      finalSourceCode: course?.finalSourceCode ?? "",
     },
   });
 
   const onSubmit = (values: CourseSchemaType) => {
+    console.log(values);
     updateCourse.mutate({
       courseId: course?.id || "",
       data: values,
@@ -345,7 +338,30 @@ const BasicInfo = ({ course }: iAppProps) => {
                 );
               }}
             />
-            <Button type="submit" disabled={form.formState.isSubmitting}>
+
+            <FormField
+              name="finalSourceCode"
+              control={form.control}
+              render={({ field }) => {
+                return (
+                  <FormItem>
+                    <FormLabel>Final Source Code </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="https://google.drive.com/"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+            <Button
+              type="submit"
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+              disabled={form.formState.isSubmitting}
+            >
               {form.formState.isSubmitting ? (
                 <div className="flex items-center gap-1">
                   <Loader2 className="w-4 h-4 animate-spin" />
